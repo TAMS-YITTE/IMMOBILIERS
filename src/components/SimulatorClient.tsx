@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X } from 'lucide-react';
+import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 import CityPageNav from '@/components/CityPageNav';
@@ -161,6 +161,40 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
           </p>
         </header>
+
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8">
+          <div className="flex items-center gap-2 justify-center mb-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-lg md:text-xl font-semibold text-white text-center">
+              4 sources de données publiques officielles, pas une estimation
+            </h2>
+          </div>
+          <p className="text-sm text-slate-400 text-center max-w-2xl mx-auto mb-6">
+            Contrairement aux simulateurs qui appliquent une moyenne nationale ou un forfait générique, chaque chiffre affiché ici vient directement d&apos;une base de données institutionnelle française, recalculée commune par commune.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
+              <TrendingUp className="w-6 h-6 text-purple-400" />
+              <span className="text-sm font-semibold text-white">Prix de vente réels</span>
+              <span className="text-xs text-slate-500">DVF — DGFiP</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
+              <Leaf className="w-6 h-6 text-emerald-400" />
+              <span className="text-sm font-semibold text-white">Diagnostics énergétiques</span>
+              <span className="text-xs text-slate-500">DPE — ADEME</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
+              <Landmark className="w-6 h-6 text-blue-400" />
+              <span className="text-sm font-semibold text-white">Fiscalité locale réelle</span>
+              <span className="text-xs text-slate-500">Taxe foncière — DGFiP</span>
+            </div>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
+              <KeyRound className="w-6 h-6 text-amber-400" />
+              <span className="text-sm font-semibold text-white">Loyers du marché</span>
+              <span className="text-xs text-slate-500">ANIL — Min. du Logement</span>
+            </div>
+          </div>
+        </div>
 
         <CityPageNav codeInsee={insee} current="acheter-ou-louer" />
 
