@@ -132,6 +132,40 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     }
   };
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    try {
+      setCheckoutLoading(true);
+      const metrics = communeMetrics[insee];
+      
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          codeInsee: insee,
+          communeName: metrics?.nom || 'Votre ville',
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur lors de l'initialisation du paiement.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Erreur de connexion.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-purple-500">
@@ -289,8 +323,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Tableaux d&apos;amortissement complets</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> 100% anonyme, aucun appel</li>
                 </ul>
-                <button type="button" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl py-3 transition-colors relative z-10">
-                  Acheter le rapport (4,99 €)
+                <button 
+                  type="button" 
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl py-3 transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : "Acheter le rapport (4,99 €)"}
                 </button>
               </div>
 
