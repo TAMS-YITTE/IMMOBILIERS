@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import SimulatorClient from "@/components/SimulatorClient";
+import CityPageNav from "@/components/CityPageNav";
 import { Metadata } from "next";
 
 // Using ISR to cache these pages on CDN, refreshing them every 24 hours
@@ -70,5 +71,12 @@ export default async function CitySimulatorPage({ params }: Props) {
     }
   };
 
-  return <SimulatorClient initialInsee={insee} initialCommuneMetrics={initialMetrics} />;
+  return (
+    <>
+      <div className="bg-slate-950 pt-8">
+        <CityPageNav codeInsee={insee} current="acheter-ou-louer" />
+      </div>
+      <SimulatorClient initialInsee={insee} initialCommuneMetrics={initialMetrics} />
+    </>
+  );
 }
