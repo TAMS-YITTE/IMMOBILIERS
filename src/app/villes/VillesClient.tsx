@@ -90,7 +90,7 @@ export default function VillesClient({ initialVilles }: { initialVilles: Ville[]
       )}
       {filtered.length === 0 && (
         <p className="text-slate-500 mt-6 text-sm">
-          Aucune commune trouvée pour "{query}".
+          Aucune commune trouvée pour &quot;{query}&quot;.
         </p>
       )}
     </div>

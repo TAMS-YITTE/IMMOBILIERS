@@ -10,9 +10,16 @@ type Props = {
   params: Promise<{ "code-insee": string }>;
 };
 
-// Generate static routes at build time for known cities (optional but good for SEO)
+// Pre-render at build time the 1000 communes with the most complete/reliable data
+// (proxy for active markets, faute de donnee de population) ; les ~31 800 autres restent
+// servies en ISR a la demande au premier acces, pas de generation statique de masse.
 export async function generateStaticParams() {
-  const { data } = await supabase.from('communes_metrics').select('code_insee');
+  const { data } = await supabase
+    .from('communes_metrics')
+    .select('code_insee')
+    .not('prix_m2_appart_moyen', 'is', null)
+    .order('fiabilite_score', { ascending: false })
+    .limit(1000);
   return data?.map((commune) => ({
     "code-insee": commune.code_insee,
   })) || [];
@@ -52,7 +59,7 @@ export default async function CitySimulatorPage({ params }: Props) {
       <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Ville Introuvable</h1>
-          <p className="text-slate-400">Nous n'avons pas encore de données pour le code INSEE {insee}.</p>
+          <p className="text-slate-400">Nous n&apos;avons pas encore de données pour le code INSEE {insee}.</p>
         </div>
       </main>
     );

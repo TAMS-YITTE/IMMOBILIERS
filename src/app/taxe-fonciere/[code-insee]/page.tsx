@@ -10,8 +10,15 @@ type Props = {
   params: Promise<{ "code-insee": string }>;
 };
 
+// Pre-render at build time the 1000 communes with the most complete/reliable data
+// (proxy for active markets, faute de donnee de population) ; les autres restent en ISR.
 export async function generateStaticParams() {
-  const { data } = await supabase.from('communes_metrics').select('code_insee');
+  const { data } = await supabase
+    .from('communes_metrics')
+    .select('code_insee')
+    .not('prix_m2_appart_moyen', 'is', null)
+    .order('fiabilite_score', { ascending: false })
+    .limit(1000);
   return data?.map((commune) => ({ "code-insee": commune.code_insee })) || [];
 }
 

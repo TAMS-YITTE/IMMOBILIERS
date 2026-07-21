@@ -6,17 +6,38 @@ import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X } from 'lu
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 
-const MOCK_COMMUNE_METRICS: Record<string, any> = {
+interface CommuneMetric {
+  nom: string;
+  prix_m2_appart: number;
+  prix_m2_maison: number;
+  loyer_m2_appart: number;
+  loyer_m2_maison: number;
+  taxe_fonciere: number;
+  ratio_dpe_fg: number;
+}
+
+interface CommuneRow {
+  code_insee: string;
+  nom_commune: string | null;
+  prix_m2_appart_moyen: number | null;
+  prix_m2_maison_moyen: number | null;
+  loyer_m2_appart_moyen: number | null;
+  loyer_m2_maison_moyen: number | null;
+  taxe_fonciere_moyenne: number | null;
+  ratio_dpe_fg: number | null;
+}
+
+const MOCK_COMMUNE_METRICS: Record<string, CommuneMetric> = {
   '75111': { nom: "Paris 11e (Mock)", prix_m2_appart: 10500, prix_m2_maison: 12000, loyer_m2_appart: 30, loyer_m2_maison: 28, taxe_fonciere: 800, ratio_dpe_fg: 0.25 },
 };
 
 interface SimulatorClientProps {
   initialInsee?: string;
-  initialCommuneMetrics?: Record<string, any>;
+  initialCommuneMetrics?: Record<string, CommuneMetric>;
 }
 
 export default function SimulatorClient({ initialInsee, initialCommuneMetrics }: SimulatorClientProps) {
-  const [communeMetrics, setCommuneMetrics] = useState<Record<string, any>>(initialCommuneMetrics || MOCK_COMMUNE_METRICS);
+  const [communeMetrics, setCommuneMetrics] = useState<Record<string, CommuneMetric>>(initialCommuneMetrics || MOCK_COMMUNE_METRICS);
   const [loading, setLoading] = useState(!initialCommuneMetrics);
   
   const [insee, setInsee] = useState(initialInsee || '75111');
@@ -43,8 +64,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         if (error) {
           console.warn("Supabase fetch failed. Using mock.", error);
         } else if (data && data.length > 0) {
-          const formattedData: Record<string, any> = {};
-          data.forEach((c: any) => {
+          const formattedData: Record<string, CommuneMetric> = {};
+          (data as CommuneRow[]).forEach((c) => {
             formattedData[c.code_insee] = {
               nom: c.nom_commune || `Commune ${c.code_insee}`,
               prix_m2_appart: c.prix_m2_appart_moyen || 0,
@@ -129,7 +150,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             Acheter ou Louer à {currentCityName} ?
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Découvrez exactement quand l'achat devient plus rentable que la location, basé sur des données publiques et réelles.
+            Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
           </p>
         </header>
 
@@ -213,7 +234,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                       <Tooltip 
                         contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                         itemStyle={{ color: '#f8fafc' }}
-                        formatter={(value: any) => typeof value === 'number' ? [`${value.toLocaleString()} €`, undefined] : [String(value), undefined]}
+                        formatter={(value: unknown) => typeof value === 'number' ? [`${value.toLocaleString()} €`, undefined] : [String(value), undefined]}
                       />
                       <Legend />
                       <Line type="monotone" name="Acheteur (Patrimoine immo - Dette)" dataKey="achat" stroke="#a855f7" strokeWidth={3} dot={false} activeDot={{ r: 8 }} />
@@ -230,7 +251,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors" />
                 <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                   <Wallet className="text-purple-400" />
-                  Passez à l'action
+                  Passez à l&apos;action
                 </h4>
                 <p className="text-sm text-slate-400 mb-6">
                   Vos mensualités estimées sont de <strong className="text-purple-300">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
@@ -262,7 +283,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 </p>
                 <ul className="space-y-2 mb-6 text-sm text-slate-300">
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Comparaison de 3 scénarios</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Tableaux d'amortissement complets</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Tableaux d&apos;amortissement complets</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> 100% anonyme, aucun appel</li>
                 </ul>
                 <button type="button" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl py-3 transition-colors relative z-10">
@@ -312,7 +333,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               <>
                 <h3 className="text-2xl font-bold text-white mb-2">Étude de financement</h3>
                 <p className="text-slate-400 mb-6 text-sm">
-                  Laissez vos coordonnées pour qu'un expert vous aide à obtenir votre prêt de {simulationResult?.mensualite_banque_estimee?.toLocaleString()} € / mois.
+                  Laissez vos coordonnées pour qu&apos;un expert vous aide à obtenir votre prêt de {simulationResult?.mensualite_banque_estimee?.toLocaleString()} € / mois.
                 </p>
                 
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
