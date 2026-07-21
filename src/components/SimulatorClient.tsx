@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
+import CityPageNav from '@/components/CityPageNav';
 
 interface CommuneMetric {
   nom: string;
@@ -153,6 +154,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
           </p>
         </header>
+
+        <CityPageNav codeInsee={insee} current="acheter-ou-louer" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
