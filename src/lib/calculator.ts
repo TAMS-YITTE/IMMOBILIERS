@@ -10,6 +10,15 @@ export function calculateMonthlyMortgage(principal: number, annualRate: number, 
   return principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
 }
 
+export function calculateLoanCapacity(monthlyPayment: number, annualRate: number, years: number): number {
+  if (monthlyPayment <= 0) return 0;
+  if (annualRate === 0) return monthlyPayment * years * 12;
+
+  const monthlyRate = annualRate / 12;
+  const numPayments = years * 12;
+  return monthlyPayment * (Math.pow(1 + monthlyRate, numPayments) - 1) / (monthlyRate * Math.pow(1 + monthlyRate, numPayments));
+}
+
 export interface SimulationParams {
   // Database mock inputs
   prix_m2: number;

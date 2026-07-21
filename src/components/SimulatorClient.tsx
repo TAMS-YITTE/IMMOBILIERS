@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2 } from 'lucide-react';
+import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -23,6 +23,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [typeBien, setTypeBien] = useState<'appart'|'maison'>('appart');
   const [surface, setSurface] = useState(50);
   const [apport, setApport] = useState(30000);
+
+  // Lead Generation State
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [leadEmail, setLeadEmail] = useState('');
+  const [leadPhone, setLeadPhone] = useState('');
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadSuccess, setLeadSuccess] = useState(false);
 
   useEffect(() => {
     // If we already have initial data (from SSR SEO page), don't fetch all
@@ -72,6 +79,34 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       apport
     });
   }, [insee, typeBien, surface, apport, communeMetrics]);
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLeadSubmitting(true);
+    
+    try {
+      const metrics = communeMetrics[insee];
+      const { error } = await supabase.from('leads').insert({
+        email: leadEmail,
+        telephone: leadPhone,
+        code_insee_recherche: insee,
+        type_bien: typeBien,
+        surface: surface,
+        apport: apport,
+        montant_projet: metrics ? (typeBien === 'appart' ? metrics.prix_m2_appart : metrics.prix_m2_maison) * surface : 0,
+        mensualite_estimee: simulationResult?.mensualite_banque_estimee || 0,
+        consentement_contact_courtier: true,
+      });
+
+      if (error) throw error;
+      setLeadSuccess(true);
+    } catch (err) {
+      console.error("Error submitting lead:", err);
+      alert("Une erreur est survenue. Veuillez vérifier votre connexion.");
+    } finally {
+      setLeadSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -198,17 +233,20 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <p className="text-sm text-slate-400 mb-6">
                   Vos mensualités estimées sont de <strong className="text-purple-300">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
                 </p>
-                <form className="space-y-4 relative z-10">
+                <div className="space-y-4 relative z-10">
                   <div className="flex items-start gap-3 bg-black/20 p-3 rounded-lg border border-white/5">
-                    <input type="checkbox" id="consent" className="mt-1 accent-purple-500 w-4 h-4" />
-                    <label htmlFor="consent" className="text-xs text-slate-400 leading-tight">
-                      J'accepte d'être recontacté(e) gratuitement par un courtier pour une étude de financement.
-                    </label>
+                    <CheckCircle2 className="text-purple-500 shrink-0 mt-0.5" size={16} />
+                    <p className="text-xs text-slate-400 leading-tight">
+                      Mise en relation gratuite et sans engagement avec les meilleurs courtiers de votre région.
+                    </p>
                   </div>
-                  <button type="button" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 transition-colors">
+                  <button 
+                    onClick={() => setShowLeadModal(true)}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 transition-colors"
+                  >
                     Trouver mon financement
                   </button>
-                </form>
+                </div>
               </div>
 
               <div className="bg-gradient-to-b from-slate-800/80 to-slate-900 border border-blue-500/30 rounded-3xl p-6 relative overflow-hidden group">
@@ -234,6 +272,80 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           </div>
         </div>
       </div>
+
+      {/* Modale de Contact B2B */}
+      {showLeadModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
+            <button 
+              onClick={() => setShowLeadModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              <X size={24} />
+            </button>
+            
+            {leadSuccess ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Demande envoyée !</h3>
+                <p className="text-slate-400">
+                  Un de nos courtiers partenaires spécialisés sur {currentCityName} va vous recontacter très vite pour votre projet.
+                </p>
+                <button 
+                  onClick={() => {
+                    setShowLeadModal(false);
+                    setLeadSuccess(false);
+                  }}
+                  className="mt-8 bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-2 rounded-xl transition-colors"
+                >
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <>
+                <h3 className="text-2xl font-bold text-white mb-2">Étude de financement</h3>
+                <p className="text-slate-400 mb-6 text-sm">
+                  Laissez vos coordonnées pour qu'un expert vous aide à obtenir votre prêt de {simulationResult?.mensualite_banque_estimee?.toLocaleString()} € / mois.
+                </p>
+                
+                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
+                    <input 
+                      type="email" 
+                      required
+                      value={leadEmail}
+                      onChange={e => setLeadEmail(e.target.value)}
+                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="vous@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Téléphone</label>
+                    <input 
+                      type="tel" 
+                      value={leadPhone}
+                      onChange={e => setLeadPhone(e.target.value)}
+                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="06 12 34 56 78"
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    disabled={leadSubmitting}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 mt-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {leadSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Être recontacté gratuitement"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -36,6 +36,9 @@ export default function Navbar() {
               <Link href="/outils/notaire" className="px-4 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
                 Frais de Notaire
               </Link>
+              <Link href="/outils/assurance-emprunteur" className="px-4 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors">
+                Assurance Emprunteur
+              </Link>
             </div>
           </div>
 
