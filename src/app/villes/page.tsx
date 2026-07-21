@@ -4,11 +4,34 @@ import VillesClient from "./VillesClient";
 // Using Next.js ISR (revalidate every hour)
 export const revalidate = 3600;
 
+async function fetchAllVilles() {
+  // L'API Supabase plafonne chaque requête à 1000 lignes : avec ~32 800 communes,
+  // il faut paginer pour récupérer la liste complète plutôt que les 1000 premières
+  // (alphabétiquement), ce qui excluait silencieusement des villes comme Paris ou Lyon.
+  const PAGE_SIZE = 1000;
+  const all: { code_insee: string; nom_commune: string }[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("communes_metrics")
+      .select("code_insee, nom_commune")
+      .order("nom_commune", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) return { data: null, error };
+    if (!data || data.length === 0) break;
+
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return { data: all, error: null };
+}
+
 export default async function VillesPage() {
-  const { data: villes, error } = await supabase
-    .from("communes_metrics")
-    .select("code_insee, nom_commune")
-    .order("nom_commune", { ascending: true });
+  const { data: villes, error } = await fetchAllVilles();
 
   if (error) {
     console.error("Error fetching cities:", error);
