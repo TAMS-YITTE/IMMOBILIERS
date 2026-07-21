@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
+import VillesClient from "./VillesClient";
 
 // Using Next.js ISR (revalidate every hour)
 export const revalidate = 3600;
@@ -29,20 +29,7 @@ export default async function VillesPage() {
         Découvrez notre analyse financière précise, ville par ville, basée sur les données réelles du marché.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {villes?.map((ville) => (
-          <Link
-            key={ville.code_insee}
-            href={`/acheter-ou-louer/${ville.code_insee}`}
-            className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors group"
-          >
-            <h2 className="text-lg font-semibold text-slate-200 group-hover:text-purple-400 transition-colors">
-              {ville.nom_commune}
-            </h2>
-            <span className="text-xs text-slate-500">Code INSEE: {ville.code_insee}</span>
-          </Link>
-        ))}
-      </div>
+      <VillesClient initialVilles={villes || []} />
     </main>
   );
 }
