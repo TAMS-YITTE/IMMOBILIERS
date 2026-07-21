@@ -30,6 +30,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [leadPhone, setLeadPhone] = useState('');
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState(false);
+  const [leadConsent, setLeadConsent] = useState(false);
 
   useEffect(() => {
     // If we already have initial data (from SSR SEO page), don't fetch all
@@ -82,8 +83,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!leadConsent) return;
     setLeadSubmitting(true);
-    
+
     try {
       const metrics = communeMetrics[insee];
       const { error } = await supabase.from('leads').insert({
@@ -95,7 +97,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         apport: apport,
         montant_projet: metrics ? (typeBien === 'appart' ? metrics.prix_m2_appart : metrics.prix_m2_maison) * surface : 0,
         mensualite_estimee: simulationResult?.mensualite_banque_estimee || 0,
-        consentement_contact_courtier: true,
+        consentement_contact_courtier: leadConsent,
       });
 
       if (error) throw error;
@@ -293,10 +295,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <p className="text-slate-400">
                   Un de nos courtiers partenaires spécialisés sur {currentCityName} va vous recontacter très vite pour votre projet.
                 </p>
-                <button 
+                <button
                   onClick={() => {
                     setShowLeadModal(false);
                     setLeadSuccess(false);
+                    setLeadConsent(false);
+                    setLeadEmail('');
+                    setLeadPhone('');
                   }}
                   className="mt-8 bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-2 rounded-xl transition-colors"
                 >
@@ -332,11 +337,24 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                       placeholder="06 12 34 56 78"
                     />
                   </div>
-                  
-                  <button 
-                    type="submit" 
-                    disabled={leadSubmitting}
-                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 mt-4 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+
+                  <div className="flex items-start gap-3 bg-black/20 p-3 rounded-lg border border-white/5">
+                    <input
+                      type="checkbox"
+                      id="lead-consent"
+                      checked={leadConsent}
+                      onChange={(e) => setLeadConsent(e.target.checked)}
+                      className="mt-1 accent-purple-500 w-4 h-4"
+                    />
+                    <label htmlFor="lead-consent" className="text-xs text-slate-400 leading-tight">
+                      J&apos;accepte d&apos;être recontacté(e) gratuitement par un courtier partenaire pour une étude personnalisée de mon financement.
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={leadSubmitting || !leadConsent}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 mt-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {leadSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Être recontacté gratuitement"}
                   </button>
