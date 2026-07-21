@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     const pdfBuffer = await generatePDFBuffer(communeName, data);
 
     // 4. Return as a downloadable file
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
