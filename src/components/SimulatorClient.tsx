@@ -62,10 +62,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [leadConsent, setLeadConsent] = useState(false);
 
   useEffect(() => {
-    // If we already have initial data (from SSR SEO page), don't fetch all
-    if (initialCommuneMetrics) {
-      return;
-    }
+    // Meme quand une page SSR fournit deja les donnees de SA ville (initialCommuneMetrics),
+    // on charge quand meme la liste complete en tache de fond : sinon la recherche ne peut
+    // jamais trouver une AUTRE ville que celle deja affichee (verifie en direct : sur la page
+    // Paris, chercher "Lyon" ne renvoyait rien). Ca ne bloque pas l'affichage initial (loading
+    // reste false quand initialCommuneMetrics est fourni).
     async function fetchSupabaseData() {
       try {
         // Supabase plafonne chaque requete a 1000 lignes : avec ~32 800 communes, il faut
@@ -105,8 +106,12 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               ratio_dpe_fg: c.ratio_dpe_fg || 0
             };
           });
-          setCommuneMetrics(formattedData);
-          setInsee(data[0].code_insee);
+          // Fusionne avec les donnees SSR de la ville courante (si presentes) plutot que de
+          // les ecraser, et ne change la ville selectionnee que si aucune n'etait deja fixee.
+          setCommuneMetrics({ ...formattedData, ...(initialCommuneMetrics || {}) });
+          if (!initialCommuneMetrics) {
+            setInsee(data[0].code_insee);
+          }
         }
       } catch (err) {
         console.error("Supabase connection error:", err);
