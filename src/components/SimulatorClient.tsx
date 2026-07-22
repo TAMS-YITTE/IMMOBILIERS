@@ -68,7 +68,28 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     }
     async function fetchSupabaseData() {
       try {
-        const { data, error } = await supabase.from('communes_metrics').select('*');
+        // Supabase plafonne chaque requete a 1000 lignes : avec ~32 800 communes, il faut
+        // paginer, sinon la recherche ne "voit" que les 1000 premieres (ex: Paris introuvable).
+        // Meme pattern que web/src/app/villes/page.tsx.
+        const PAGE_SIZE = 1000;
+        const allRows: CommuneRow[] = [];
+        let from = 0;
+        let error = null;
+        while (true) {
+          const { data: page, error: pageError } = await supabase
+            .from('communes_metrics')
+            .select('*')
+            .range(from, from + PAGE_SIZE - 1);
+          if (pageError) {
+            error = pageError;
+            break;
+          }
+          if (!page || page.length === 0) break;
+          allRows.push(...(page as CommuneRow[]));
+          if (page.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        const data = allRows;
         if (error) {
           console.warn("Supabase fetch failed. Using mock.", error);
         } else if (data && data.length > 0) {
