@@ -24,10 +24,10 @@ function formatEuro(amount: any) {
 function generatePDFBuffer(communeName: string, data: any, simResult: any, userParams: any): ArrayBuffer {
   const doc = new jsPDF();
   
-  // Variables de simulation
+  // Variables de simulation (respecte le type de bien choisi : appartement ou maison)
   const surface = userParams.surface;
-  const prixM2 = Number(data.prix_m2_appart_moyen) || 0;
-  const loyerM2 = Number(data.loyer_m2_appart_moyen) || 0;
+  const prixM2 = Number(userParams.typeBien === 'appart' ? data.prix_m2_appart_moyen : data.prix_m2_maison_moyen) || 0;
+  const loyerM2 = Number(userParams.typeBien === 'appart' ? data.loyer_m2_appart_moyen : data.loyer_m2_maison_moyen) || 0;
   
   const prixTotal = prixM2 * surface;
   const loyerMensuel = loyerM2 * surface;
@@ -221,14 +221,16 @@ export async function GET(request: Request) {
     const userParams = {
       surface: Number(session.metadata?.surface) || 60,
       apport: Number(session.metadata?.apport) || 0,
+      typeBien: session.metadata?.typeBien === 'maison' ? 'maison' : 'appart',
       tauxPret: session.metadata?.tauxPret ? Number(session.metadata.tauxPret) / 100 : 0.035,
       dureePret: Number(session.metadata?.dureePret) || 25,
     };
 
-    // Simulate using the calculator
+    // Simulate using the calculator (respecte le type de bien choisi par l'utilisateur,
+    // pas toujours "appartement")
     const simParams = {
-      prix_m2: Number(data.prix_m2_appart_moyen) || 0,
-      loyer_m2: Number(data.loyer_m2_appart_moyen) || 0,
+      prix_m2: Number(userParams.typeBien === 'appart' ? data.prix_m2_appart_moyen : data.prix_m2_maison_moyen) || 0,
+      loyer_m2: Number(userParams.typeBien === 'appart' ? data.loyer_m2_appart_moyen : data.loyer_m2_maison_moyen) || 0,
       taxe_fonciere_annuelle: Number(data.taxe_fonciere_moyenne) || 0,
       ratio_dpe_fg: Number(data.ratio_dpe_fg) || 0,
       surface: userParams.surface,
