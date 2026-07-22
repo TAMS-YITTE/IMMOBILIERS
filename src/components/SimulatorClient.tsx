@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
@@ -48,6 +48,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [tauxPret, setTauxPret] = useState(3.5); // Taux en pourcentage
   const [dureePret, setDureePret] = useState(25); // Durée en années
 
+  // City Search State
+  const [searchQuery, setSearchQuery] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   // Lead Generation State
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadEmail, setLeadEmail] = useState('');
@@ -90,6 +95,39 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     }
     fetchSupabaseData();
   }, [initialCommuneMetrics]);
+
+  // Derived display value for the city input field
+  const currentCity = communeMetrics[insee];
+  const displayValue = searchQuery !== null 
+    ? searchQuery 
+    : (currentCity ? `${currentCity.nom} (${insee})` : insee);
+
+  // Click outside to close dropdown and reset query back to current city display
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+        setSearchQuery(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredCommunes = useMemo(() => {
+    if (searchQuery === null || searchQuery.trim() === '') {
+      return Object.entries(communeMetrics).slice(0, 30);
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    return Object.entries(communeMetrics)
+      .filter(([code, data]) => {
+        const nomMatch = data.nom?.toLowerCase().includes(q);
+        const codeMatch = code.includes(q);
+        return nomMatch || codeMatch;
+      })
+      .slice(0, 30);
+  }, [communeMetrics, searchQuery]);
 
   const simulationResult = useMemo(() => {
     const metrics = communeMetrics[insee] || communeMetrics[Object.keys(communeMetrics)[0]];
@@ -246,17 +284,65 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               </h2>
               
               <div className="space-y-5">
-                <div>
+                <div className="relative" ref={dropdownRef}>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Ville ciblée</label>
-                  <select 
-                    value={insee} 
-                    onChange={(e) => setInsee(e.target.value)}
-                    className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-                  >
-                    {Object.entries(communeMetrics).map(([code, data]) => (
-                      <option key={code} value={code}>{data.nom} ({code})</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input 
+                      type="text"
+                      value={displayValue}
+                      onFocus={() => setIsDropdownOpen(true)}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      placeholder="Rechercher une ville ou code INSEE..."
+                      className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-slate-500 pr-10"
+                    />
+                    {isDropdownOpen && displayValue ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setIsDropdownOpen(true);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs">
+                        ▼
+                      </div>
+                    )}
+                  </div>
+
+                  {isDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50 divide-y divide-white/5">
+                      {filteredCommunes.length > 0 ? (
+                        filteredCommunes.map(([code, data]) => (
+                          <button
+                            key={code}
+                            type="button"
+                            onClick={() => {
+                              setInsee(code);
+                              setSearchQuery(null);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-3 hover:bg-purple-500/20 transition-colors flex items-center justify-between text-sm ${
+                              code === insee ? 'bg-purple-500/10 text-purple-300 font-medium' : 'text-slate-200'
+                            }`}
+                          >
+                            <span>{data.nom}</span>
+                            <span className="text-xs text-slate-500 font-mono">{code}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-slate-500 italic">
+                          Aucune commune trouvée
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
