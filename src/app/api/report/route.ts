@@ -14,12 +14,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
 
 function formatPrice(price: any) {
   if (!price) return 'Non disponible';
-  return Math.round(Number(price)).toLocaleString('fr-FR') + ' €/m²';
+  return Math.round(Number(price)).toLocaleString('fr-FR').replace(/ /g, ' ') + ' €/m²';
 }
 
 function formatEuro(amount: any) {
   if (!amount) return 'Non disponible';
-  return Math.round(Number(amount)).toLocaleString('fr-FR') + ' €';
+  return Math.round(Number(amount)).toLocaleString('fr-FR').replace(/ /g, ' ') + ' €';
 }
 
 function generatePDFBuffer(communeName: string, data: any, simResult: any, userParams: any): ArrayBuffer {
@@ -117,7 +117,7 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
 
   const y5 = getSimLine(4);
   const y10 = getSimLine(9);
-  const y20 = getSimLine(19);
+  const y25 = getSimLine(24);
 
   // Tracer un mini tableau
   doc.setFontSize(11);
@@ -148,7 +148,7 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
 
   drawRow(70, 'Revente à 5 ans', y5);
   drawRow(80, 'Revente à 10 ans', y10);
-  drawRow(90, 'Revente à 20 ans', y20);
+  drawRow(90, 'Revente à 25 ans', y25);
 
   // Section 4: Tableau d'amortissement
   doc.addPage();

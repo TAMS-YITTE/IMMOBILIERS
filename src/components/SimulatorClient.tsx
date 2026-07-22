@@ -45,6 +45,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [typeBien, setTypeBien] = useState<'appart'|'maison'>('appart');
   const [surface, setSurface] = useState(50);
   const [apport, setApport] = useState(30000);
+  const [tauxPret, setTauxPret] = useState(3.5); // Taux en pourcentage
+  const [dureePret, setDureePret] = useState(25); // Durée en années
 
   // Lead Generation State
   const [showLeadModal, setShowLeadModal] = useState(false);
@@ -99,9 +101,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       taxe_fonciere_annuelle: metrics.taxe_fonciere,
       ratio_dpe_fg: metrics.ratio_dpe_fg,
       surface,
-      apport
+      apport,
+      taux_pret: tauxPret / 100, // Conversion en décimal
+      duree_pret_annees: dureePret
     });
-  }, [insee, typeBien, surface, apport, communeMetrics]);
+  }, [insee, typeBien, surface, apport, tauxPret, dureePret, communeMetrics]);
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +153,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           communeName: metrics?.nom || 'Votre ville',
           surface,
           apport,
-          typeBien
+          typeBien,
+          tauxPret,
+          dureePret
         }),
       });
 
@@ -274,6 +280,16 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Apport personnel (€): {apport.toLocaleString()}</label>
                   <input type="range" min="0" max="200000" step="5000" value={apport} onChange={(e) => setApport(Number(e.target.value))} className="w-full accent-purple-500" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Taux du crédit (%): {tauxPret.toFixed(2)} %</label>
+                  <input type="range" min="1.0" max="7.0" step="0.1" value={tauxPret} onChange={(e) => setTauxPret(Number(e.target.value))} className="w-full accent-purple-500" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">Durée du prêt (années): {dureePret}</label>
+                  <input type="range" min="5" max="30" step="1" value={dureePret} onChange={(e) => setDureePret(Number(e.target.value))} className="w-full accent-purple-500" />
                 </div>
               </div>
             </div>
