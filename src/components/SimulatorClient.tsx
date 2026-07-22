@@ -67,6 +67,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadEmail, setLeadEmail] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
+  const [leadHoneypot, setLeadHoneypot] = useState('');
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState(false);
   const [leadConsent, setLeadConsent] = useState(false);
@@ -202,6 +203,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadConsent) return;
+    if (leadHoneypot.trim() !== '') {
+      // Silent rejection for spam bots
+      setLeadSuccess(true);
+      return;
+    }
     setLeadSubmitting(true);
 
     try {
@@ -636,6 +642,16 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 </p>
                 
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  {/* Honeypot field for bot protection */}
+                  <input
+                    type="text"
+                    name="website_confirm"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={leadHoneypot}
+                    onChange={(e) => setLeadHoneypot(e.target.value)}
+                    className="opacity-0 absolute -z-10 h-0 w-0 pointer-events-none"
+                  />
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
                     <input 
