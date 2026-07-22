@@ -149,9 +149,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           communeName: metrics?.nom || 'Votre ville',
           surface,
           apport,
-          typeBien,
-          tauxPret,
-          dureePret
+          typeBien
         }),
       });
 
