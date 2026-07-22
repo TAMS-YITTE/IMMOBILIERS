@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { CheckCircle2, Download, Home } from "lucide-react";
 
-export default function PaiementReussiPage({
+export default async function PaiementReussiPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string; code?: string };
+  searchParams: Promise<{ session_id?: string; code?: string }>;
 }) {
-  const { session_id, code } = searchParams;
+  const resolvedParams = await searchParams;
+  const { session_id, code } = resolvedParams;
 
   if (!session_id) {
     return (
