@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { jsPDF } from 'jspdf';
 import { supabase } from '@/lib/supabaseClient';
-import { simulateBuyVsRent } from '@/lib/calculator';
+import { simulateBuyVsRent, calculateAmortizationSchedule } from '@/lib/calculator';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
-  apiVersion: '2023-10-16' as any,
+  apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
 });
 
 function formatPrice(price: any) {
@@ -25,17 +26,15 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   const doc = new jsPDF();
   
   // Variables de simulation (respecte le type de bien choisi : appartement ou maison)
-  const surface = userParams.surface;
+  const surface = Number(userParams.surface);
   const prixM2 = Number(userParams.typeBien === 'appart' ? data.prix_m2_appart_moyen : data.prix_m2_maison_moyen) || 0;
   const loyerM2 = Number(userParams.typeBien === 'appart' ? data.loyer_m2_appart_moyen : data.loyer_m2_maison_moyen) || 0;
   
   const prixTotal = prixM2 * surface;
-  const loyerMensuel = loyerM2 * surface;
-  const rendementBrut = prixTotal > 0 ? ((loyerMensuel * 12) / prixTotal) * 100 : 0;
   const fraisNotaire = prixTotal * 0.08;
-  const apport = userParams.apport;
+  const apport = Number(userParams.apport);
 
-  const ratioPassoires = data.ratio_dpe_fg || 0;
+  const ratioPassoires = Number(data.ratio_dpe_fg) || 0;
   const budgetRenoEstime = surface * 1000;
 
   // PAGE 1: Synthèse & Données de base
@@ -131,12 +130,12 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   doc.text('Gagnant', 170, 60);
 
   doc.setTextColor(30, 41, 59);
-  const drawRow = (yPos: number, label: string, data: any) => {
+  const drawRow = (yPos: number, label: string, rowData: any) => {
     doc.text(label, 25, yPos);
-    doc.text(formatEuro(data.achat), 70, yPos);
-    doc.text(formatEuro(data.location), 120, yPos);
+    doc.text(formatEuro(rowData.achat), 70, yPos);
+    doc.text(formatEuro(rowData.location), 120, yPos);
     
-    if (data.achat > data.location) {
+    if (rowData.achat > rowData.location) {
       doc.setTextColor(22, 163, 74);
       doc.text('ACHAT', 170, yPos);
     } else {
@@ -151,27 +150,92 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   drawRow(80, 'Revente à 10 ans', y10);
   drawRow(90, 'Revente à 20 ans', y20);
 
-  // Section: Risque Loi Climat
-  doc.line(20, 110, 190, 110);
+  // Section 4: Tableau d'amortissement
+  doc.addPage();
+  doc.setFillColor(15, 23, 42); 
+  doc.rect(0, 0, 210, 25, 'F');
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255); 
+  doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
+
   doc.setFontSize(14);
   doc.setTextColor(139, 92, 246);
-  doc.text('4. Risque Loi Climat (DPE)', 20, 125);
+  doc.text('4. Tableau d\'amortissement complet', 20, 45);
+
+  const amortissement = calculateAmortizationSchedule(
+    simResult.montant_emprunte, 
+    userParams.tauxPret, 
+    userParams.dureePret
+  );
+
+  doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(15, 23, 42);
+  doc.rect(20, 55, 170, 8, 'F');
+  doc.text('Année', 25, 60);
+  doc.text('Capital Remboursé', 65, 60);
+  doc.text('Intérêts Payés', 115, 60);
+  doc.text('Capital Restant', 165, 60);
+
+  let yPosT = 70;
+  for (const ligne of amortissement) {
+    if (yPosT > 270) {
+      doc.addPage();
+      doc.setFillColor(15, 23, 42); 
+      doc.rect(0, 0, 210, 25, 'F');
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255); 
+      doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFillColor(15, 23, 42);
+      doc.rect(20, 35, 170, 8, 'F');
+      doc.text('Année', 25, 40);
+      doc.text('Capital Remboursé', 65, 40);
+      doc.text('Intérêts Payés', 115, 40);
+      doc.text('Capital Restant', 165, 40);
+      
+      yPosT = 50;
+    }
+    
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Année ${ligne.annee}`, 25, yPosT);
+    doc.text(formatEuro(ligne.capitalRembourseAnnuel), 65, yPosT);
+    doc.text(formatEuro(ligne.interetsAnnuels), 115, yPosT);
+    doc.text(formatEuro(ligne.capitalRestantDu), 165, yPosT);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, yPosT+3, 190, yPosT+3);
+    
+    yPosT += 10;
+  }
+
+  // Section: Risque Loi Climat
+  doc.addPage();
+  doc.setFillColor(15, 23, 42); 
+  doc.rect(0, 0, 210, 25, 'F');
+  doc.setFontSize(14);
+  doc.setTextColor(255, 255, 255); 
+  doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
+
+  doc.setFontSize(14);
+  doc.setTextColor(139, 92, 246);
+  doc.text('5. Risque Loi Climat (DPE)', 20, 45);
 
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  doc.text(`Proportion de biens "Passoires Thermiques" (F et G) : ${(ratioPassoires * 100).toFixed(1)} %`, 20, 135);
+  doc.text(`Proportion de biens "Passoires Thermiques" (F et G) : ${(ratioPassoires * 100).toFixed(1)} %`, 20, 55);
   
   doc.setFontSize(11);
   if (ratioPassoires > 0.25) {
     doc.setTextColor(220, 38, 38); 
-    doc.text(`ATTENTION : Le risque énergétique est très élevé sur cette commune.`, 20, 145);
+    doc.text(`ATTENTION : Le risque énergétique est très élevé sur cette commune.`, 20, 65);
     doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`En cas d'achat d'un bien classé G, il sera interdit à la location dès 2025. Prévoyez une décote à l'achat et un budget travaux estimé à ${formatEuro(budgetRenoEstime)} pour une rénovation globale.`, 170), 20, 155);
+    doc.text(doc.splitTextToSize(`En cas d'achat d'un bien classé G, il sera interdit à la location dès 2025. Prévoyez une décote à l'achat et un budget travaux estimé à ${formatEuro(budgetRenoEstime)} pour une rénovation globale.`, 170), 20, 75);
   } else {
     doc.setTextColor(22, 163, 74);
-    doc.text(`Le parc immobilier local est relativement sain.`, 20, 145);
+    doc.text(`Le parc immobilier local est relativement sain.`, 20, 65);
     doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 155);
+    doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 75);
   }
 
   // Footer
@@ -195,7 +259,7 @@ export async function GET(request: Request) {
     let session;
     try {
       session = await stripe.checkout.sessions.retrieve(sessionId);
-    } catch (e) {
+    } catch {
       return NextResponse.json({ error: 'Invalid Stripe session' }, { status: 400 });
     }
 
@@ -252,10 +316,10 @@ export async function GET(request: Request) {
         'Content-Disposition': `attachment; filename="Rapport_Kalcul_${communeName.replace(/\s+/g, '_')}.pdf"`,
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating report:', error);
     return NextResponse.json(
-      { error: 'Internal Server Error', details: error.message },
+      { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

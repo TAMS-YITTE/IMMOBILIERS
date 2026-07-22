@@ -19,6 +19,36 @@ export function calculateLoanCapacity(monthlyPayment: number, annualRate: number
   return monthlyPayment * (Math.pow(1 + monthlyRate, numPayments) - 1) / (monthlyRate * Math.pow(1 + monthlyRate, numPayments));
 }
 
+export function calculateAmortizationSchedule(montantEmprunte: number, tauxPret: number, dureePret: number) {
+  const schedule: { annee: number; capitalRestantDu: number; interetsAnnuels: number; capitalRembourseAnnuel: number }[] = [];
+  if (montantEmprunte <= 0 || dureePret <= 0) return schedule;
+  
+  const mensualite = calculateMonthlyMortgage(montantEmprunte, tauxPret, dureePret);
+  const tauxMensuel = tauxPret / 12;
+  let capitalRestant = montantEmprunte;
+  
+  for (let annee = 1; annee <= dureePret; annee++) {
+    let interetsAnnuels = 0;
+    let capitalRembourseAnnuel = 0;
+    
+    for (let mois = 1; mois <= 12; mois++) {
+      const interetsDuMois = capitalRestant * tauxMensuel;
+      const amortissement = mensualite - interetsDuMois;
+      capitalRestant -= amortissement;
+      interetsAnnuels += interetsDuMois;
+      capitalRembourseAnnuel += amortissement;
+    }
+    
+    schedule.push({
+      annee,
+      capitalRestantDu: Math.max(0, capitalRestant),
+      interetsAnnuels,
+      capitalRembourseAnnuel
+    });
+  }
+  return schedule;
+}
+
 export interface SimulationParams {
   // Database mock inputs
   prix_m2: number;
@@ -134,6 +164,7 @@ export function simulateBuyVsRent(params: SimulationParams) {
   return {
     bascule_annee: basculeMois !== -1 ? (basculeMois / 12).toFixed(1) : null,
     mensualite_banque_estimee: Math.round(mensualiteCredit + assuranceMensuelle),
+    montant_emprunte: montantEmprunte,
     history
   };
 }

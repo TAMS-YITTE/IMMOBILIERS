@@ -15,7 +15,7 @@ export default async function PaiementReussiPage({
         <h1 className="text-3xl font-bold text-white mb-4">Session invalide</h1>
         <p className="text-slate-400 mb-8">Aucun paiement détecté.</p>
         <Link href="/" className="px-6 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-500 transition-colors">
-          Retour à l'accueil
+          Retour à l&apos;accueil
         </Link>
       </main>
     );
@@ -54,7 +54,7 @@ export default async function PaiementReussiPage({
             className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-white/5 text-white font-medium px-6 py-4 rounded-xl transition-colors"
           >
             <Home size={20} />
-            Retour à l'analyse
+            Retour à l&apos;analyse
           </Link>
         </div>
       </div>
