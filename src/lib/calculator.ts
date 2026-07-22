@@ -69,6 +69,8 @@ export interface SimulationParams {
   inflation_loyer?: number;
   charges_copro_m2_an?: number;
   frais_notaire_taux?: number;
+  frais_agence_taux?: number;
+  provision_renovation_m2_an?: number;
   duree_projection_annees?: number;
 }
 
@@ -84,20 +86,23 @@ export function simulateBuyVsRent(params: SimulationParams) {
     inflation_loyer = 0.015,
     charges_copro_m2_an = 25.0,
     frais_notaire_taux = 0.08,
+    frais_agence_taux = 0.0,
+    provision_renovation_m2_an,
     duree_projection_annees = 25
   } = params;
 
   // Buying initial costs
   const coutAcquisition = prix_m2 * surface;
   const fraisNotaire = coutAcquisition * frais_notaire_taux;
-  const coutTotalProjet = coutAcquisition + fraisNotaire;
+  const fraisAgence = coutAcquisition * frais_agence_taux;
+  const coutTotalProjet = coutAcquisition + fraisNotaire + fraisAgence;
 
   const montantEmprunte = Math.max(0, coutTotalProjet - apport);
   const mensualiteCredit = calculateMonthlyMortgage(montantEmprunte, taux_pret, duree_pret_annees);
   const assuranceMensuelle = (montantEmprunte * taux_assurance) / 12;
   
   // Provision DPE
-  const provisionRenovationM2An = ratio_dpe_fg > 0.3 ? 30.0 : 15.0;
+  const provisionRenovationM2An = provision_renovation_m2_an !== undefined ? provision_renovation_m2_an : (ratio_dpe_fg > 0.3 ? 30.0 : 15.0);
   const provisionRenovationMensuelle = (provisionRenovationM2An * surface) / 12;
 
   const chargesCoproMensuelle = (charges_copro_m2_an * surface) / 12;

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound } from 'lucide-react';
+import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound, ChevronDown, Sliders } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 import CityPageNav from '@/components/CityPageNav';
@@ -49,6 +49,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [apport, setApport] = useState(30000);
   const [tauxPret, setTauxPret] = useState(3.5); // Taux en pourcentage
   const [dureePret, setDureePret] = useState(25); // Durée en années
+
+  // Advanced options state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [tauxAssurance, setTauxAssurance] = useState(0.3); // %
+  const [fraisAgence, setFraisAgence] = useState(0); // %
+  const [chargesCopro, setChargesCopro] = useState(25); // €/m²/an
+  const [customProvisionReno, setCustomProvisionReno] = useState<number | null>(null);
 
   // City Search State (index leger : code + nom uniquement, pas toutes les colonnes)
   const [cityIndex, setCityIndex] = useState<CityIndexEntry[]>([]);
@@ -173,6 +180,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     const metrics = communeMetrics[insee];
     if (!metrics) return null;
     
+    const defaultProvisionReno = metrics.ratio_dpe_fg > 0.3 ? 30 : 15;
+    const actualProvisionReno = customProvisionReno !== null ? customProvisionReno : defaultProvisionReno;
+
     return simulateBuyVsRent({
       prix_m2: typeBien === 'appart' ? metrics.prix_m2_appart : metrics.prix_m2_maison,
       loyer_m2: typeBien === 'appart' ? metrics.loyer_m2_appart : metrics.loyer_m2_maison,
@@ -181,9 +191,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       surface,
       apport,
       taux_pret: tauxPret / 100, // Conversion en décimal
-      duree_pret_annees: dureePret
+      duree_pret_annees: dureePret,
+      taux_assurance: tauxAssurance / 100,
+      frais_agence_taux: fraisAgence / 100,
+      charges_copro_m2_an: chargesCopro,
+      provision_renovation_m2_an: actualProvisionReno,
     });
-  }, [insee, typeBien, surface, apport, tauxPret, dureePret, communeMetrics]);
+  }, [insee, typeBien, surface, apport, tauxPret, dureePret, tauxAssurance, fraisAgence, chargesCopro, customProvisionReno, communeMetrics]);
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,7 +249,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           apport,
           typeBien,
           tauxPret,
-          dureePret
+          dureePret,
+          tauxAssurance,
+          fraisAgence,
+          chargesCopro,
+          provisionReno: customProvisionReno !== null ? customProvisionReno : (metrics?.ratio_dpe_fg && metrics.ratio_dpe_fg > 0.3 ? 30 : 15)
         }),
       });
 
@@ -421,6 +439,61 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">Durée du prêt (années): {dureePret}</label>
                   <input type="range" min="5" max="30" step="1" value={dureePret} onChange={(e) => setDureePret(Number(e.target.value))} className="w-full accent-purple-500" />
+                </div>
+
+                {/* Section Options Avancées */}
+                <div className="pt-2 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="w-full flex items-center justify-between py-2 text-sm font-medium text-purple-300 hover:text-purple-200 transition-colors"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sliders size={16} />
+                      Options avancées
+                    </span>
+                    <ChevronDown size={16} className={`transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showAdvanced && (
+                    <div className="mt-4 space-y-4 pt-2">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Taux d&apos;assurance emprunteur (%): {tauxAssurance.toFixed(2)} %
+                        </label>
+                        <input type="range" min="0.0" max="1.0" step="0.05" value={tauxAssurance} onChange={(e) => setTauxAssurance(Number(e.target.value))} className="w-full accent-purple-500" />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Frais d&apos;agence (%): {fraisAgence.toFixed(1)} %
+                        </label>
+                        <input type="range" min="0.0" max="8.0" step="0.5" value={fraisAgence} onChange={(e) => setFraisAgence(Number(e.target.value))} className="w-full accent-purple-500" />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Charges de copropriété (€/m²/an): {chargesCopro} €
+                        </label>
+                        <input type="range" min="0" max="60" step="1" value={chargesCopro} onChange={(e) => setChargesCopro(Number(e.target.value))} className="w-full accent-purple-500" />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Coût travaux / rénovation (€/m²/an): {customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)} €
+                        </label>
+                        <input 
+                          type="range" 
+                          min="0" 
+                          max="80" 
+                          step="5" 
+                          value={customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)} 
+                          onChange={(e) => setCustomProvisionReno(Number(e.target.value))} 
+                          className="w-full accent-purple-500" 
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
