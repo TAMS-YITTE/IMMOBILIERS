@@ -123,6 +123,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         apport: apport,
         montant_projet: metrics ? (typeBien === 'appart' ? metrics.prix_m2_appart : metrics.prix_m2_maison) * surface : 0,
         mensualite_estimee: simulationResult?.mensualite_banque_estimee || 0,
+        taux_pret: tauxPret,
+        duree_pret: dureePret,
         consentement_contact_courtier: leadConsent,
       });
 
