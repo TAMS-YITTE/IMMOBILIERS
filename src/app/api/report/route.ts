@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { jsPDF } from 'jspdf';
 import { supabase } from '@/lib/supabaseClient';
+import { simulateBuyVsRent } from '@/lib/calculator';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -20,11 +21,11 @@ function formatEuro(amount: any) {
   return Math.round(Number(amount)).toLocaleString('fr-FR') + ' €';
 }
 
-function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
+function generatePDFBuffer(communeName: string, data: any, simResult: any, userParams: any): ArrayBuffer {
   const doc = new jsPDF();
   
-  // Variables de simulation pour 60m²
-  const surface = 60;
+  // Variables de simulation
+  const surface = userParams.surface;
   const prixM2 = Number(data.prix_m2_appart_moyen) || 0;
   const loyerM2 = Number(data.loyer_m2_appart_moyen) || 0;
   
@@ -32,10 +33,10 @@ function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
   const loyerMensuel = loyerM2 * surface;
   const rendementBrut = prixTotal > 0 ? ((loyerMensuel * 12) / prixTotal) * 100 : 0;
   const fraisNotaire = prixTotal * 0.08;
-  const apportRecommande = fraisNotaire + (prixTotal * 0.10); // Notaire + 10% du prix
+  const apport = userParams.apport;
 
   const ratioPassoires = data.ratio_dpe_fg || 0;
-  const budgetRenoEstime = surface * 1000; // 1000€/m2 pour reno globale
+  const budgetRenoEstime = surface * 1000;
 
   // PAGE 1: Synthèse & Données de base
   doc.setFillColor(15, 23, 42); 
@@ -71,16 +72,16 @@ function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
   doc.line(20, 130, 190, 130);
   doc.setFontSize(14);
   doc.setTextColor(139, 92, 246);
-  doc.text(`2. Simulation d'Achat : Appartement Type de ${surface} m²`, 20, 145);
+  doc.text(`2. Votre Scénario : Achat de ${surface} m²`, 20, 145);
 
   doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Pour un budget d'environ ${formatEuro(prixTotal)} (hors frais annexes) :`, 20, 155);
+  doc.text(`Budget d'environ ${formatEuro(prixTotal)} (hors frais annexes) | Apport: ${formatEuro(apport)}`, 20, 155);
 
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
   doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 165);
-  doc.text(`• Apport cash recommandé : ${formatEuro(apportRecommande)}`, 25, 175);
+  doc.text(`• Mensualité bancaire estimée : ${formatEuro(simResult.mensualite_banque_estimee)} / mois`, 25, 175);
   
   // Conclusion Page 1
   doc.setFillColor(248, 250, 252);
@@ -91,10 +92,12 @@ function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
   
   doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
-  const textConclusion = `À ${communeName}, l'investissement immobilier sur cet appartement devient mathématiquement plus rentable que la location après une détention moyenne de 7 à 11 ans (amortissement des frais de mutation).`;
+  const textConclusion = simResult.bascule_annee 
+    ? `Selon votre profil, l'investissement immobilier sur cet appartement devient mathématiquement plus rentable que la location après une détention de ${simResult.bascule_annee} ans.`
+    : `Attention, selon vos critères, la location reste mathématiquement plus avantageuse que l'achat sur l'ensemble de la période simulée (25 ans).`;
   doc.text(doc.splitTextToSize(textConclusion, 160), 25, 212);
 
-  // PAGE 2: Investissement & Risques
+  // PAGE 2: Scénarios & Risques
   doc.addPage();
   doc.setFillColor(15, 23, 42); 
   doc.rect(0, 0, 210, 25, 'F');
@@ -102,43 +105,73 @@ function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
   doc.setTextColor(255, 255, 255); 
   doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
 
-  // Section: Investissement Locatif
+  // Section: Comparaison selon la durée
   doc.setFontSize(14);
   doc.setTextColor(139, 92, 246);
-  doc.text('3. Potentiel Investisseur (Rendement)', 20, 45);
+  doc.text('3. Comparaison selon la durée de détention', 20, 45);
 
-  doc.setFontSize(12);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Rendement Locatif Brut estimé : ${rendementBrut.toFixed(2)} %`, 20, 55);
-  
+  const hist = simResult.history;
+  const getSimLine = (yearIndex: number) => {
+    if (!hist[yearIndex]) return { achat: 0, location: 0 };
+    return hist[yearIndex];
+  };
+
+  const y5 = getSimLine(4);
+  const y10 = getSimLine(9);
+  const y20 = getSimLine(19);
+
+  // Tracer un mini tableau
   doc.setFontSize(11);
-  doc.setTextColor(71, 85, 105);
-  let commentaireRendement = "Un rendement modéré, caractéristique des zones patrimoniales.";
-  if (rendementBrut > 6) commentaireRendement = "Un rendement très attractif, propice à un investissement cash-flow positif.";
-  if (rendementBrut < 4) commentaireRendement = "Un rendement faible. Le gain se fera sur la plus-value à la revente plutôt que sur les loyers.";
-  doc.text(doc.splitTextToSize(`Si vous mettez ce bien de ${surface}m² en location à ${formatEuro(loyerMensuel)}/mois : ${commentaireRendement}`, 170), 20, 65);
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(139, 92, 246);
+  doc.rect(20, 55, 170, 8, 'F');
+  doc.text('Scénario', 25, 60);
+  doc.text('Patrimoine Acheteur', 70, 60);
+  doc.text('Patrimoine Locataire', 120, 60);
+  doc.text('Gagnant', 170, 60);
+
+  doc.setTextColor(30, 41, 59);
+  const drawRow = (yPos: number, label: string, data: any) => {
+    doc.text(label, 25, yPos);
+    doc.text(formatEuro(data.achat), 70, yPos);
+    doc.text(formatEuro(data.location), 120, yPos);
+    
+    if (data.achat > data.location) {
+      doc.setTextColor(22, 163, 74);
+      doc.text('ACHAT', 170, yPos);
+    } else {
+      doc.setTextColor(220, 38, 38);
+      doc.text('LOCATION', 170, yPos);
+    }
+    doc.setTextColor(30, 41, 59);
+    doc.line(20, yPos+3, 190, yPos+3);
+  };
+
+  drawRow(70, 'Revente à 5 ans', y5);
+  drawRow(80, 'Revente à 10 ans', y10);
+  drawRow(90, 'Revente à 20 ans', y20);
 
   // Section: Risque Loi Climat
-  doc.line(20, 85, 190, 85);
+  doc.line(20, 110, 190, 110);
   doc.setFontSize(14);
   doc.setTextColor(139, 92, 246);
-  doc.text('4. Risque Loi Climat (DPE)', 20, 100);
+  doc.text('4. Risque Loi Climat (DPE)', 20, 125);
 
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  doc.text(`Proportion de biens "Passoires Thermiques" (F et G) : ${(ratioPassoires * 100).toFixed(1)} %`, 20, 110);
+  doc.text(`Proportion de biens "Passoires Thermiques" (F et G) : ${(ratioPassoires * 100).toFixed(1)} %`, 20, 135);
   
   doc.setFontSize(11);
   if (ratioPassoires > 0.25) {
-    doc.setTextColor(220, 38, 38); // Red
-    doc.text(`ATTENTION : Le risque énergétique est très élevé sur cette commune.`, 20, 120);
+    doc.setTextColor(220, 38, 38); 
+    doc.text(`ATTENTION : Le risque énergétique est très élevé sur cette commune.`, 20, 145);
     doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`En cas d'achat d'un bien classé G, il sera interdit à la location dès 2025. Prévoyez une décote à l'achat et un budget travaux estimé à ${formatEuro(budgetRenoEstime)} pour une rénovation globale.`, 170), 20, 130);
+    doc.text(doc.splitTextToSize(`En cas d'achat d'un bien classé G, il sera interdit à la location dès 2025. Prévoyez une décote à l'achat et un budget travaux estimé à ${formatEuro(budgetRenoEstime)} pour une rénovation globale.`, 170), 20, 155);
   } else {
-    doc.setTextColor(22, 163, 74); // Green
-    doc.text(`Le parc immobilier local est relativement sain.`, 20, 120);
+    doc.setTextColor(22, 163, 74);
+    doc.text(`Le parc immobilier local est relativement sain.`, 20, 145);
     doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 130);
+    doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 155);
   }
 
   // Footer
@@ -174,7 +207,7 @@ export async function GET(request: Request) {
     const codeInsee = session.metadata?.codeInsee;
     const communeName = session.metadata?.communeName || 'votre ville';
 
-    let data = {};
+    let data: any = {};
     if (codeInsee) {
       const { data: metrics } = await supabase
         .from('communes_metrics')
@@ -185,8 +218,29 @@ export async function GET(request: Request) {
       if (metrics) data = metrics;
     }
 
+    const userParams = {
+      surface: Number(session.metadata?.surface) || 60,
+      apport: Number(session.metadata?.apport) || 0,
+      tauxPret: session.metadata?.tauxPret ? Number(session.metadata.tauxPret) / 100 : 0.035,
+      dureePret: Number(session.metadata?.dureePret) || 25,
+    };
+
+    // Simulate using the calculator
+    const simParams = {
+      prix_m2: Number(data.prix_m2_appart_moyen) || 0,
+      loyer_m2: Number(data.loyer_m2_appart_moyen) || 0,
+      taxe_fonciere_annuelle: Number(data.taxe_fonciere_moyenne) || 0,
+      ratio_dpe_fg: Number(data.ratio_dpe_fg) || 0,
+      surface: userParams.surface,
+      apport: userParams.apport,
+      taux_pret: userParams.tauxPret,
+      duree_pret_annees: userParams.dureePret
+    };
+
+    const simResult = simulateBuyVsRent(simParams);
+
     // 3. Generate the PDF
-    const pdfBuffer = generatePDFBuffer(communeName, data);
+    const pdfBuffer = generatePDFBuffer(communeName, data, simResult, userParams);
 
     // 4. Return as a downloadable file
     return new NextResponse(pdfBuffer, {

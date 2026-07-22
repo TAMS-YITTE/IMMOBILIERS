@@ -147,6 +147,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         body: JSON.stringify({
           codeInsee: insee,
           communeName: metrics?.nom || 'Votre ville',
+          surface,
+          apport,
+          typeBien,
+          tauxPret,
+          dureePret
         }),
       });
 

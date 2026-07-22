@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { codeInsee, communeName } = body;
+    const { codeInsee, communeName, surface, apport, typeBien, tauxPret, dureePret } = body;
 
     if (!codeInsee) {
       return NextResponse.json({ error: 'Code INSEE missing' }, { status: 400 });
@@ -39,6 +39,11 @@ export async function POST(request: Request) {
       metadata: {
         codeInsee,
         communeName,
+        surface: surface?.toString() || '',
+        apport: apport?.toString() || '',
+        typeBien: typeBien || '',
+        tauxPret: tauxPret?.toString() || '',
+        dureePret: dureePret?.toString() || '',
       },
     });
 
