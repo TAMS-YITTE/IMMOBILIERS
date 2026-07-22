@@ -47,7 +47,8 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   const apport = Number(userParams.apport);
 
   const ratioPassoires = Number(data.ratio_dpe_fg) || 0;
-  const budgetRenoEstime = surface * 1000;
+  const renoCostPerM2 = ratioPassoires > 0.35 ? 1200 : (ratioPassoires > 0.15 ? 750 : 400);
+  const budgetRenoEstime = surface * renoCostPerM2;
 
   // PAGE 1: Synthèse & Données de base
   doc.setFillColor(15, 23, 42); 
@@ -162,6 +163,81 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   drawRow(70, 'Revente à 5 ans', y5);
   drawRow(80, 'Revente à 10 ans', y10);
   drawRow(90, 'Revente à 20 ans', y20);
+
+  // --- Graphique Patrimoine Net (jsPDF line drawing) ---
+  doc.setFontSize(12);
+  doc.setTextColor(139, 92, 246);
+  doc.text('Évolution du patrimoine net sur 25 ans', 20, 110);
+
+  // Légende
+  doc.setLineWidth(1.5);
+  doc.setDrawColor(168, 85, 247); // Violet - Acheteur
+  doc.line(20, 117, 30, 117);
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text('Acheteur', 33, 118);
+
+  doc.setDrawColor(59, 130, 246); // Bleu - Locataire
+  doc.line(65, 117, 75, 117);
+  doc.text('Locataire', 78, 118);
+
+  const gX = 20;
+  const gY = 125;
+  const gWidth = 170;
+  const gHeight = 75;
+
+  // Background & Cadre du graphique
+  doc.setFillColor(248, 250, 252);
+  doc.rect(gX, gY, gWidth, gHeight, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.rect(gX, gY, gWidth, gHeight);
+
+  if (hist && hist.length > 0) {
+    let maxVal = 0;
+    for (const h of hist) {
+      if (h.achat > maxVal) maxVal = h.achat;
+      if (h.location > maxVal) maxVal = h.location;
+    }
+    if (maxVal === 0) maxVal = 100000;
+
+    // Grille horizontale
+    for (let i = 1; i <= 3; i++) {
+      const lineY = gY + gHeight - (i * gHeight / 4);
+      doc.setDrawColor(241, 245, 249);
+      doc.line(gX, lineY, gX + gWidth, lineY);
+      const valLabel = Math.round((maxVal * (i / 4)) / 1000) + 'k€';
+      doc.setFontSize(7);
+      doc.setTextColor(148, 163, 184);
+      doc.text(valLabel, gX + 2, lineY - 1);
+    }
+
+    const numPoints = hist.length;
+    const mapX = (idx: number) => gX + (idx / (numPoints - 1)) * gWidth;
+    const mapY = (val: number) => gY + gHeight - (val / maxVal) * gHeight;
+
+    // Tracer courbe Acheteur (Violet)
+    doc.setDrawColor(168, 85, 247);
+    doc.setLineWidth(1.5);
+    for (let i = 0; i < numPoints - 1; i++) {
+      const x1 = mapX(i);
+      const y1 = mapY(hist[i].achat);
+      const x2 = mapX(i + 1);
+      const y2 = mapY(hist[i + 1].achat);
+      doc.line(x1, y1, x2, y2);
+    }
+
+    // Tracer courbe Locataire (Bleu)
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(1.5);
+    for (let i = 0; i < numPoints - 1; i++) {
+      const x1 = mapX(i);
+      const y1 = mapY(hist[i].location);
+      const x2 = mapX(i + 1);
+      const y2 = mapY(hist[i + 1].location);
+      doc.line(x1, y1, x2, y2);
+    }
+  }
 
   // Section 4: Tableau d'amortissement
   doc.addPage();
