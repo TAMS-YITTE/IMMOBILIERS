@@ -135,7 +135,34 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleCheckout = async () => {
-    alert("La génération du rapport détaillé avec paiement sécurisé (Stripe) arrive très prochainement !");
+    try {
+      setCheckoutLoading(true);
+      const metrics = communeMetrics[insee];
+      
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          codeInsee: insee,
+          communeName: metrics?.nom || 'Votre ville',
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Erreur lors de l'initialisation du paiement.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Erreur de connexion.");
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
 
@@ -333,9 +360,10 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <button 
                   type="button" 
                   onClick={handleCheckout}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl py-3 transition-colors relative z-10 border border-slate-600 flex items-center justify-center gap-2"
+                  disabled={checkoutLoading}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl py-3 transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Acheter le rapport (Bientôt disponible)
+                  {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : "Acheter le rapport (4,99 €)"}
                 </button>
               </div>
 
