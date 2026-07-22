@@ -10,52 +10,77 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16' as any,
 });
 
+function formatPrice(price: any) {
+  if (!price) return 'Non disponible';
+  return Math.round(Number(price)).toLocaleString('fr-FR') + ' €/m²';
+}
+
+function formatEuro(amount: any) {
+  if (!amount) return 'Non disponible';
+  return Math.round(Number(amount)).toLocaleString('fr-FR') + ' €';
+}
+
 function generatePDFBuffer(communeName: string, data: any): ArrayBuffer {
   const doc = new jsPDF();
   
+  // Header background
+  doc.setFillColor(15, 23, 42); // slate-950
+  doc.rect(0, 0, 210, 40, 'F');
+  
   doc.setFontSize(24);
-  doc.setTextColor(139, 92, 246);
-  doc.text('Kalcul.app - Rapport Financier', 105, 20, { align: 'center' });
+  doc.setTextColor(255, 255, 255); // White
+  doc.text('Kalcul.app - Rapport Financier', 105, 25, { align: 'center' });
   
-  doc.setFontSize(16);
+  // Title
+  doc.setFontSize(18);
   doc.setTextColor(30, 41, 59);
-  doc.text(`Analyse Immobiliere : ${communeName}`, 20, 40);
+  doc.text(`Analyse Immobilière : ${communeName}`, 20, 60);
   
   doc.setFontSize(12);
-  doc.text(`Ce document confidentiel detaille les metriques pour ${communeName}.`, 20, 50);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Ce document confidentiel détaille les métriques pour ${communeName}.`, 20, 70);
   
+  // Section 1
+  doc.setDrawColor(226, 232, 240);
+  doc.line(20, 80, 190, 80);
   doc.setFontSize(14);
-  doc.setTextColor(59, 130, 246);
-  doc.text('Donnees Marche (DVF 2023)', 20, 70);
+  doc.setTextColor(139, 92, 246); // Purple
+  doc.text('Données Marché (DVF 2023)', 20, 90);
   
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  doc.text(`Prix moyen Appartement : ${data.prix_m2_appart_moyen ? data.prix_m2_appart_moyen + ' EUR/m2' : 'Non disponible'}`, 20, 80);
-  doc.text(`Prix moyen Maison : ${data.prix_m2_maison_moyen ? data.prix_m2_maison_moyen + ' EUR/m2' : 'Non disponible'}`, 20, 90);
-  doc.text(`Loyer moyen : ${data.loyer_m2_appart_moyen ? data.loyer_m2_appart_moyen + ' EUR/m2' : 'Non disponible'}`, 20, 100);
+  doc.text(`Prix moyen Appartement : ${formatPrice(data.prix_m2_appart_moyen)}`, 20, 100);
+  doc.text(`Prix moyen Maison : ${formatPrice(data.prix_m2_maison_moyen)}`, 20, 110);
+  doc.text(`Loyer moyen : ${formatPrice(data.loyer_m2_appart_moyen)}`, 20, 120);
   
-  doc.setFontSize(14);
-  doc.setTextColor(59, 130, 246);
-  doc.text('Fiscalite & Performance Energetique', 20, 120);
-  
-  doc.setFontSize(12);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Taxe Fonciere Moyenne : ${data.taxe_fonciere_moyenne ? data.taxe_fonciere_moyenne + ' EUR' : 'Non disponible'}`, 20, 130);
-  doc.text(`Proportion de passoires thermiques (F/G) : ${data.ratio_dpe_fg ? (data.ratio_dpe_fg * 100).toFixed(1) + ' %' : 'Non disponible'}`, 20, 140);
-  
+  // Section 2
+  doc.line(20, 135, 190, 135);
   doc.setFontSize(14);
   doc.setTextColor(139, 92, 246);
-  doc.text('Conclusion Kalcul.app', 20, 160);
+  doc.text('Fiscalité & Performance Énergétique', 20, 145);
   
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  const text = `Base sur les donnees de ${communeName}, l'investissement immobilier necessite une detention moyenne de 7 a 12 ans pour amortir les frais de notaire et la taxe fonciere comparativement a la location.`;
-  const splitText = doc.splitTextToSize(text, 170);
-  doc.text(splitText, 20, 170);
+  doc.text(`Taxe Foncière Moyenne : ${formatEuro(data.taxe_fonciere_moyenne)}`, 20, 155);
+  doc.text(`Proportion de passoires thermiques (F/G) : ${data.ratio_dpe_fg ? (data.ratio_dpe_fg * 100).toFixed(1) + ' %' : 'Non disponible'}`, 20, 165);
   
+  // Conclusion
+  doc.setFillColor(248, 250, 252);
+  doc.rect(20, 185, 170, 40, 'F');
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Conclusion Kalcul.app', 25, 195);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(71, 85, 105);
+  const text = `Basé sur les données de ${communeName}, l'investissement immobilier nécessite une détention moyenne de 7 à 12 ans pour amortir les frais de notaire et la taxe foncière comparativement à la location.`;
+  const splitText = doc.splitTextToSize(text, 160);
+  doc.text(splitText, 25, 205);
+  
+  // Footer
   doc.setFontSize(10);
   doc.setTextColor(148, 163, 184);
-  doc.text('© 2026 Kalcul.app - Donnees fournies a titre indicatif', 105, 280, { align: 'center' });
+  doc.text('© 2026 Kalcul.app - Données fournies à titre indicatif', 105, 280, { align: 'center' });
 
   return doc.output('arraybuffer');
 }
