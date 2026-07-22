@@ -28,9 +28,10 @@ interface CommuneRow {
   ratio_dpe_fg: number | null;
 }
 
-const MOCK_COMMUNE_METRICS: Record<string, CommuneMetric> = {
-  '75111': { nom: "Paris 11e (Mock)", prix_m2_appart: 10500, prix_m2_maison: 12000, loyer_m2_appart: 30, loyer_m2_maison: 28, taxe_fonciere: 800, ratio_dpe_fg: 0.25 },
-};
+interface CityIndexEntry {
+  code_insee: string;
+  nom: string;
+}
 
 interface SimulatorClientProps {
   initialInsee?: string;
@@ -38,9 +39,10 @@ interface SimulatorClientProps {
 }
 
 export default function SimulatorClient({ initialInsee, initialCommuneMetrics }: SimulatorClientProps) {
-  const [communeMetrics, setCommuneMetrics] = useState<Record<string, CommuneMetric>>(initialCommuneMetrics || MOCK_COMMUNE_METRICS);
+  const [communeMetrics, setCommuneMetrics] = useState<Record<string, CommuneMetric>>(initialCommuneMetrics || {});
   const [loading, setLoading] = useState(!initialCommuneMetrics);
-  
+  const [fetchingCity, setFetchingCity] = useState(false);
+
   const [insee, setInsee] = useState(initialInsee || '75111');
   const [typeBien, setTypeBien] = useState<'appart'|'maison'>('appart');
   const [surface, setSurface] = useState(50);
@@ -48,7 +50,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [tauxPret, setTauxPret] = useState(3.5); // Taux en pourcentage
   const [dureePret, setDureePret] = useState(25); // Durée en années
 
-  // City Search State
+  // City Search State (index leger : code + nom uniquement, pas toutes les colonnes)
+  const [cityIndex, setCityIndex] = useState<CityIndexEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,66 +64,81 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [leadSuccess, setLeadSuccess] = useState(false);
   const [leadConsent, setLeadConsent] = useState(false);
 
+  // Index leger pour la recherche (code + nom seulement, pas les 6 colonnes de mesures) :
+  // telecharger les 32 800 lignes completes juste pour peupler une barre de recherche etait
+  // inutilement lourd. Se charge en tache de fond, y compris sur les pages SSR par ville, sinon
+  // la recherche ne peut jamais trouver une AUTRE ville que celle deja affichee (verifie en
+  // direct : sur la page Paris, chercher "Lyon" ne renvoyait rien).
   useEffect(() => {
-    // Meme quand une page SSR fournit deja les donnees de SA ville (initialCommuneMetrics),
-    // on charge quand meme la liste complete en tache de fond : sinon la recherche ne peut
-    // jamais trouver une AUTRE ville que celle deja affichee (verifie en direct : sur la page
-    // Paris, chercher "Lyon" ne renvoyait rien). Ca ne bloque pas l'affichage initial (loading
-    // reste false quand initialCommuneMetrics est fourni).
-    async function fetchSupabaseData() {
+    async function fetchCityIndex() {
       try {
-        // Supabase plafonne chaque requete a 1000 lignes : avec ~32 800 communes, il faut
-        // paginer, sinon la recherche ne "voit" que les 1000 premieres (ex: Paris introuvable).
-        // Meme pattern que web/src/app/villes/page.tsx.
         const PAGE_SIZE = 1000;
-        const allRows: CommuneRow[] = [];
+        const allRows: CityIndexEntry[] = [];
         let from = 0;
-        let error = null;
         while (true) {
-          const { data: page, error: pageError } = await supabase
+          const { data: page, error } = await supabase
             .from('communes_metrics')
-            .select('*')
+            .select('code_insee, nom_commune')
             .range(from, from + PAGE_SIZE - 1);
-          if (pageError) {
-            error = pageError;
-            break;
-          }
-          if (!page || page.length === 0) break;
-          allRows.push(...(page as CommuneRow[]));
+          if (error || !page || page.length === 0) break;
+          allRows.push(...page.map((r: { code_insee: string; nom_commune: string | null }) => ({
+            code_insee: r.code_insee,
+            nom: r.nom_commune || `Commune ${r.code_insee}`,
+          })));
           if (page.length < PAGE_SIZE) break;
           from += PAGE_SIZE;
         }
-        const data = allRows;
-        if (error) {
-          console.warn("Supabase fetch failed. Using mock.", error);
-        } else if (data && data.length > 0) {
-          const formattedData: Record<string, CommuneMetric> = {};
-          (data as CommuneRow[]).forEach((c) => {
-            formattedData[c.code_insee] = {
-              nom: c.nom_commune || `Commune ${c.code_insee}`,
-              prix_m2_appart: c.prix_m2_appart_moyen || 0,
-              prix_m2_maison: c.prix_m2_maison_moyen || 0,
-              loyer_m2_appart: c.loyer_m2_appart_moyen || 0,
-              loyer_m2_maison: c.loyer_m2_maison_moyen || 0,
-              taxe_fonciere: c.taxe_fonciere_moyenne || 0,
-              ratio_dpe_fg: c.ratio_dpe_fg || 0
-            };
-          });
-          // Fusionne avec les donnees SSR de la ville courante (si presentes) plutot que de
-          // les ecraser, et ne change la ville selectionnee que si aucune n'etait deja fixee.
-          setCommuneMetrics({ ...formattedData, ...(initialCommuneMetrics || {}) });
-          if (!initialCommuneMetrics) {
-            setInsee(data[0].code_insee);
-          }
-        }
+        setCityIndex(allRows);
       } catch (err) {
-        console.error("Supabase connection error:", err);
-      } finally {
-        setLoading(false);
+        console.error("City index fetch error:", err);
       }
     }
-    fetchSupabaseData();
-  }, [initialCommuneMetrics]);
+    fetchCityIndex();
+  }, []);
+
+  // Recupere les donnees completes d'UNE commune a la demande (ville courante au premier
+  // rendu si non fournie par le SSR, ou nouvelle ville selectionnee dans la recherche).
+  async function fetchCityMetrics(code: string): Promise<CommuneMetric | null> {
+    const { data, error } = await supabase
+      .from('communes_metrics')
+      .select('*')
+      .eq('code_insee', code)
+      .single();
+    if (error || !data) return null;
+    const row = data as CommuneRow;
+    return {
+      nom: row.nom_commune || `Commune ${code}`,
+      prix_m2_appart: row.prix_m2_appart_moyen || 0,
+      prix_m2_maison: row.prix_m2_maison_moyen || 0,
+      loyer_m2_appart: row.loyer_m2_appart_moyen || 0,
+      loyer_m2_maison: row.loyer_m2_maison_moyen || 0,
+      taxe_fonciere: row.taxe_fonciere_moyenne || 0,
+      ratio_dpe_fg: row.ratio_dpe_fg || 0,
+    };
+  }
+
+  useEffect(() => {
+    // Deja en cache (SSR, ou ville deja visitee) : rien a charger. "loading" est deja a
+    // false dans ce cas (il ne vaut true qu'au tout premier montage sans donnee initiale).
+    if (communeMetrics[insee]) {
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setFetchingCity(true);
+      const metrics = await fetchCityMetrics(insee);
+      if (cancelled) return;
+      if (metrics) {
+        setCommuneMetrics((prev) => ({ ...prev, [insee]: metrics }));
+      } else {
+        console.warn(`Aucune donnee trouvee pour la commune ${insee}`);
+      }
+      setFetchingCity(false);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insee]);
 
   // Derived display value for the city input field
   const currentCity = communeMetrics[insee];
@@ -142,21 +160,17 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
   const filteredCommunes = useMemo(() => {
     if (searchQuery === null || searchQuery.trim() === '') {
-      return Object.entries(communeMetrics).slice(0, 30);
+      return cityIndex.slice(0, 30);
     }
 
     const q = searchQuery.trim().toLowerCase();
-    return Object.entries(communeMetrics)
-      .filter(([code, data]) => {
-        const nomMatch = data.nom?.toLowerCase().includes(q);
-        const codeMatch = code.includes(q);
-        return nomMatch || codeMatch;
-      })
+    return cityIndex
+      .filter((c) => c.nom.toLowerCase().includes(q) || c.code_insee.includes(q))
       .slice(0, 30);
-  }, [communeMetrics, searchQuery]);
+  }, [cityIndex, searchQuery]);
 
   const simulationResult = useMemo(() => {
-    const metrics = communeMetrics[insee] || communeMetrics[Object.keys(communeMetrics)[0]];
+    const metrics = communeMetrics[insee];
     if (!metrics) return null;
     
     return simulateBuyVsRent({
@@ -311,9 +325,12 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               
               <div className="space-y-5">
                 <div className="relative" ref={dropdownRef}>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Ville ciblée</label>
+                  <label className="block text-sm font-medium text-slate-400 mb-2 flex items-center gap-2">
+                    Ville ciblée
+                    {fetchingCity && <Loader2 className="w-3 h-3 animate-spin text-purple-400" />}
+                  </label>
                   <div className="relative">
-                    <input 
+                    <input
                       type="text"
                       value={displayValue}
                       onFocus={() => setIsDropdownOpen(true)}
@@ -345,21 +362,21 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   {isDropdownOpen && (
                     <div className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50 divide-y divide-white/5">
                       {filteredCommunes.length > 0 ? (
-                        filteredCommunes.map(([code, data]) => (
+                        filteredCommunes.map((c) => (
                           <button
-                            key={code}
+                            key={c.code_insee}
                             type="button"
                             onClick={() => {
-                              setInsee(code);
+                              setInsee(c.code_insee);
                               setSearchQuery(null);
                               setIsDropdownOpen(false);
                             }}
                             className={`w-full text-left px-4 py-3 hover:bg-purple-500/20 transition-colors flex items-center justify-between text-sm ${
-                              code === insee ? 'bg-purple-500/10 text-purple-300 font-medium' : 'text-slate-200'
+                              c.code_insee === insee ? 'bg-purple-500/10 text-purple-300 font-medium' : 'text-slate-200'
                             }`}
                           >
-                            <span>{data.nom}</span>
-                            <span className="text-xs text-slate-500 font-mono">{code}</span>
+                            <span>{c.nom}</span>
+                            <span className="text-xs text-slate-500 font-mono">{c.code_insee}</span>
                           </button>
                         ))
                       ) : (
