@@ -12,14 +12,26 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
 });
 
+// Regroupe les milliers avec une espace ASCII normale (0x20). toLocaleString('fr-FR')
+// insere un caractere d espacement special (insecable ou insecable etroit selon la
+// version de Node/ICU) que les polices standard de jsPDF n affichent pas (rendu "/").
+// On construit le regroupement nous-memes pour ne dependre d aucun caractere invisible.
+function groupThousands(value: any): string {
+  const num = Number(value) || 0;
+  const negative = num < 0;
+  const digits = Math.round(Math.abs(num)).toString();
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return negative ? `-${grouped}` : grouped;
+}
+
 function formatPrice(price: any) {
   if (!price) return 'Non disponible';
-  return Math.round(Number(price)).toLocaleString('fr-FR').replace(/ /g, ' ') + ' €/m²';
+  return groupThousands(price) + ' €/m²';
 }
 
 function formatEuro(amount: any) {
   if (!amount) return 'Non disponible';
-  return Math.round(Number(amount)).toLocaleString('fr-FR').replace(/ /g, ' ') + ' €';
+  return groupThousands(amount) + ' €';
 }
 
 function generatePDFBuffer(communeName: string, data: any, simResult: any, userParams: any): ArrayBuffer {
@@ -79,22 +91,23 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
 
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
-  doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 165);
-  doc.text(`• Mensualité bancaire estimée : ${formatEuro(simResult.mensualite_banque_estimee)} / mois`, 25, 175);
-  
+  doc.text(`• Taux du prêt : ${(Number(userParams.tauxPret) * 100).toFixed(2)} % sur ${userParams.dureePret} ans`, 25, 165);
+  doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 175);
+  doc.text(`• Mensualité bancaire estimée : ${formatEuro(simResult.mensualite_banque_estimee)} / mois`, 25, 185);
+
   // Conclusion Page 1
   doc.setFillColor(248, 250, 252);
-  doc.rect(20, 190, 170, 35, 'F');
+  doc.rect(20, 200, 170, 35, 'F');
   doc.setFontSize(13);
   doc.setTextColor(15, 23, 42);
-  doc.text('Verdict : Acheter ou Louer ?', 25, 202);
-  
+  doc.text('Verdict : Acheter ou Louer ?', 25, 212);
+
   doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
-  const textConclusion = simResult.bascule_annee 
+  const textConclusion = simResult.bascule_annee
     ? `Selon votre profil, l'investissement immobilier sur cet appartement devient mathématiquement plus rentable que la location après une détention de ${simResult.bascule_annee} ans.`
     : `Attention, selon vos critères, la location reste mathématiquement plus avantageuse que l'achat sur l'ensemble de la période simulée (25 ans).`;
-  doc.text(doc.splitTextToSize(textConclusion, 160), 25, 212);
+  doc.text(doc.splitTextToSize(textConclusion, 160), 25, 222);
 
   // PAGE 2: Scénarios & Risques
   doc.addPage();
@@ -117,7 +130,7 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
 
   const y5 = getSimLine(4);
   const y10 = getSimLine(9);
-  const y25 = getSimLine(24);
+  const y20 = getSimLine(19);
 
   // Tracer un mini tableau
   doc.setFontSize(11);
@@ -148,7 +161,7 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
 
   drawRow(70, 'Revente à 5 ans', y5);
   drawRow(80, 'Revente à 10 ans', y10);
-  drawRow(90, 'Revente à 25 ans', y25);
+  drawRow(90, 'Revente à 20 ans', y20);
 
   // Section 4: Tableau d'amortissement
   doc.addPage();
