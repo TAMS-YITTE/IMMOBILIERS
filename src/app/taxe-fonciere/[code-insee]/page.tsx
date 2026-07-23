@@ -80,7 +80,7 @@ export default async function TaxeFoncierePage({ params }: Props) {
         </div>
 
         {fiabiliteFaible && (
-          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-slate-600 max-w-2xl mx-auto">
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-slate-700 max-w-2xl mx-auto">
             <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <p>
               Cette commune a un score de fiabilité des données plus faible que la moyenne — le montant peut être une estimation basée sur la moyenne départementale plutôt qu&apos;une donnée directe.
@@ -89,7 +89,7 @@ export default async function TaxeFoncierePage({ params }: Props) {
         )}
 
         <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             La taxe foncière n&apos;est qu&apos;une partie du coût réel de la propriété à {cityName}. Voyez l&apos;impact complet sur 25 ans.
           </p>
           <Link
@@ -101,7 +101,7 @@ export default async function TaxeFoncierePage({ params }: Props) {
           </Link>
         </div>
 
-        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Montant moyen basé sur les données de fiscalité locale (DGFiP), à titre indicatif. Le montant réel dépend de la valeur locative cadastrale du bien.
         </p>
       </div>

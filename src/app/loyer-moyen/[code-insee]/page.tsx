@@ -92,13 +92,13 @@ export default async function LoyerMoyenPage({ params }: Props) {
         </div>
 
         {loyerAppart50m2 && (
-          <p className="text-center text-slate-500 text-sm">
+          <p className="text-center text-slate-600 text-sm">
             Soit environ <strong className="text-slate-900">{loyerAppart50m2.toLocaleString()} € / mois</strong> pour un appartement de 50 m².
           </p>
         )}
 
         <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             À ce niveau de loyer, l&apos;achat est-il plus rentable à {cityName} ? Comparez sur 25 ans.
           </p>
           <Link
@@ -110,7 +110,7 @@ export default async function LoyerMoyenPage({ params }: Props) {
           </Link>
         </div>
 
-        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Indicateur de loyer d&apos;annonce par commune (ANIL/Observatoires des loyers), à titre indicatif. Le loyer réel dépend de l&apos;état et de l&apos;emplacement précis du bien.
         </p>
       </div>

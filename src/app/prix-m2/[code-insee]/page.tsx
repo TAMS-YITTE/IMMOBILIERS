@@ -91,7 +91,7 @@ export default async function PrixM2Page({ params }: Props) {
         </div>
 
         <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             À ce prix, à partir de combien d&apos;années l&apos;achat devient-il plus rentable que la location à {cityName} ?
           </p>
           <Link
@@ -103,7 +103,7 @@ export default async function PrixM2Page({ params }: Props) {
           </Link>
         </div>
 
-        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Prix médian calculé sur les transactions DVF (Demandes de Valeurs Foncières, DGFiP), à titre indicatif. Ne remplace pas une estimation par un professionnel.
         </p>
       </div>

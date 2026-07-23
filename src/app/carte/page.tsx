@@ -10,12 +10,36 @@ export const metadata: Metadata = {
 export const revalidate = 86400; // 24 hours ISR
 
 export default async function CartePage() {
-  const { data: communes } = await supabase
-    .from("communes_metrics")
-    .select("code_insee, nom_commune, prix_m2_appart_moyen, loyer_m2_appart_moyen, taxe_fonciere_moyenne, ratio_dpe_fg, codes_postaux")
-    .limit(1000);
+  const PAGE_SIZE = 1000;
+  
+  interface CommuneData {
+    code_insee: string;
+    nom_commune: string | null;
+    prix_m2_appart_moyen: number | null;
+    loyer_m2_appart_moyen: number | null;
+    taxe_fonciere_moyenne: number | null;
+    ratio_dpe_fg: number | null;
+    codes_postaux: string[] | null;
+  }
+  
+  const allCommunes: CommuneData[] = [];
+  let from = 0;
 
-  const initialMetrics = communes || [];
+  while (true) {
+    const { data, error } = await supabase
+      .from("communes_metrics")
+      .select("code_insee, nom_commune, prix_m2_appart_moyen, loyer_m2_appart_moyen, taxe_fonciere_moyenne, ratio_dpe_fg, codes_postaux")
+      .not("prix_m2_appart_moyen", "is", null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error || !data || data.length === 0) break;
+    
+    allCommunes.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  const initialMetrics = allCommunes;
 
   return (
     <main className="max-w-7xl mx-auto p-6 py-12">

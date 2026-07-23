@@ -80,7 +80,7 @@ export default async function RenovationEnergetiquePage({ params }: Props) {
           <p className="text-sm text-slate-500 mt-2">des logements diagnostiqués depuis juillet 2021</p>
         </div>
 
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-slate-600 max-w-2xl mx-auto">
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-slate-700 max-w-2xl mx-auto shadow-sm">
           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <p>
             Depuis la Loi Climat et Résilience, la location des logements classés <strong>G</strong> est interdite depuis 2025, et les <strong>F</strong> le seront à partir de 2028. Si vous achetez un bien mal classé à {cityName}, prévoyez un budget travaux dans votre plan de financement.
@@ -88,31 +88,31 @@ export default async function RenovationEnergetiquePage({ params }: Props) {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 flex items-center gap-4 max-w-2xl mx-auto shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100">
             <Hammer className="w-6 h-6 text-purple-600" />
           </div>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-700">
             Notre simulateur provisionne automatiquement <strong className="text-slate-900">{provisionM2An} €/m²/an</strong> de travaux de rénovation énergétique à {cityName}, calculé à partir de la part de passoires thermiques de la zone.
           </p>
         </div>
 
         <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-slate-600 mb-4">
             Intégrez ce budget travaux dans votre comparaison achat vs location à {cityName}.
           </p>
           <Link
             href={`/acheter-ou-louer/${insee}`}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full px-6 py-3 transition-all duration-150"
+            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl px-6 py-3 transition-colors"
           >
             Lancer la simulation complète
             <ArrowRight size={16} />
           </Link>
-          <p className="text-xs text-slate-400 mt-4">
+          <p className="text-xs text-slate-500 mt-4">
             Bientôt : mise en relation avec des diagnostiqueurs et artisans RGE certifiés près de {cityName}.
           </p>
         </div>
 
-        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Données DPE (Diagnostics de Performance Énergétique) issues de l&apos;ADEME, limitées aux diagnostics postérieurs à la réforme de juillet 2021, à titre indicatif.
         </p>
       </div>
