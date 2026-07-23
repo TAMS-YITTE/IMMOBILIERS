@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
-import Link from 'next/link';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { simulateBuyVsRent } from '@/lib/calculator';
-import { Info, MapPin, ArrowRight } from 'lucide-react';
+import { Info, Loader2 } from 'lucide-react';
+import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
+import { Tooltip } from "react-tooltip";
 
 interface CommuneData {
   code_insee: string;
@@ -23,7 +25,18 @@ const REF_SCENARIO = {
 };
 
 export default function CarteClient({ initialCommunes }: { initialCommunes: CommuneData[] }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [coordsData, setCoordsData] = useState<Record<string, [number, number]> | null>(null);
+
+  useEffect(() => {
+    // Dynamically import the coordinates json to avoid blocking the main bundle
+    import('@/data/communes-coords.json').then((mod) => {
+      setCoordsData((mod.default as unknown) as Record<string, [number, number]>);
+    }).catch(err => {
+      console.warn("Coords data not yet available", err);
+    });
+  }, []);
 
   const processedCities = useMemo(() => {
     return initialCommunes.map((c) => {
@@ -43,40 +56,40 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
 
       const bascule = sim.bascule_annee !== null ? Number(sim.bascule_annee) : null;
 
-      let colorClass = 'bg-red-50 border-red-200 text-red-700';
-      let category = 'Rentable tard / Jamais';
+      let fill = "#ef4444"; // red-500
+      let category = 'Location gagne';
       if (bascule !== null && bascule <= 8) {
-        colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
-        category = 'Très rentable (< 8 ans)';
+        fill = "#10b981"; // emerald-500
+        category = `Très rentable (< 8 ans)`;
       } else if (bascule !== null && bascule <= 15) {
-        colorClass = 'bg-amber-50 border-amber-200 text-amber-700';
-        category = 'Moyennement rentable (8-15 ans)';
+        fill = "#f59e0b"; // amber-500
+        category = `Moyennement rentable (8-15 ans)`;
+      } else if (bascule !== null) {
+        category = `Bascule en ${bascule} ans`;
       }
 
       return {
         code: c.code_insee,
-        codePostal: c.codes_postaux && c.codes_postaux.length > 0 ? c.codes_postaux[0] : null,
-        codesPostaux: c.codes_postaux || [],
         nom: c.nom_commune || c.code_insee,
-        prixM2,
-        loyerM2,
+        codePostal: c.codes_postaux && c.codes_postaux.length > 0 ? c.codes_postaux[0] : null,
         bascule,
+        fill,
         category,
-        colorClass,
       };
     });
   }, [initialCommunes]);
 
+  const mapCenter = [2.5, 46.5]; // Center of France
+  
+  // Apply search filter if any
   const filteredCities = useMemo(() => {
-    if (!searchTerm.trim()) return processedCities.slice(0, 48);
+    if (!searchTerm.trim()) return processedCities;
     const q = searchTerm.toLowerCase();
-    return processedCities
-      .filter((c) =>
-        c.nom.toLowerCase().includes(q) ||
-        c.code.includes(q) ||
-        c.codesPostaux.some((cp) => cp.includes(q))
-      )
-      .slice(0, 48);
+    return processedCities.filter((c) =>
+      c.nom.toLowerCase().includes(q) ||
+      c.code.includes(q) ||
+      (c.codePostal && c.codePostal.includes(q))
+    );
   }, [processedCities, searchTerm]);
 
   return (
@@ -115,37 +128,75 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Rechercher une ville ou un code postal..."
+          placeholder="Isoler une ville ou un code postal..."
           className="w-full bg-white border border-slate-200 rounded-full px-6 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm"
         />
       </div>
 
-      {/* Grille Thermique des Communes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filteredCities.map((c) => (
-          <Link
-            key={c.code}
-            href={`/acheter-ou-louer/${c.code}`}
-            className={`p-5 rounded-3xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-md flex flex-col justify-between group ${c.colorClass}`}
-          >
-            <div>
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-base text-slate-900 group-hover:text-purple-700 transition-colors">
-                  {c.nom}
-                </h3>
-                <MapPin size={16} className="text-slate-400 shrink-0" />
-              </div>
-              <p className="text-xs text-slate-500 font-mono mb-4">{c.codePostal || `INSEE: ${c.code}`}</p>
+      {/* Carte Interactive */}
+      <div className="w-full h-[600px] bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden relative">
+        {!coordsData && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
+            <div className="flex flex-col items-center gap-4 text-purple-600">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <p className="font-medium">Chargement des données cartographiques...</p>
             </div>
+          </div>
+        )}
+        
+        <ComposableMap
+          projection="geoAzimuthalEqualArea"
+          projectionConfig={{
+            rotate: [-3.0, -46.5, 0],
+            scale: 2500
+          }}
+          className="w-full h-full"
+        >
+          <ZoomableGroup center={mapCenter as [number, number]} zoom={1} minZoom={1} maxZoom={10}>
+            <Geographies geography="/data/france.geojson">
+              {({ geographies }) =>
+                geographies.map((geo) => (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill="#f1f5f9"
+                    stroke="#cbd5e1"
+                    strokeWidth={0.5}
+                    style={{
+                      default: { outline: "none" },
+                      hover: { outline: "none", fill: "#e2e8f0" },
+                      pressed: { outline: "none" },
+                    }}
+                  />
+                ))
+              }
+            </Geographies>
 
-            <div className="pt-3 border-t border-slate-200/50 flex items-center justify-between text-xs">
-              <span className="font-semibold">
-                {c.bascule !== null ? `Bascule : ${c.bascule} ans` : 'Location gagne'}
-              </span>
-              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        ))}
+            {coordsData && filteredCities.map((c) => {
+              const coords = coordsData[c.code];
+              if (!coords) return null;
+
+              return (
+                <Marker key={c.code} coordinates={coords}>
+                  <circle
+                    r={searchTerm ? 4 : 2}
+                    fill={c.fill}
+                    stroke="#ffffff"
+                    strokeWidth={0.5}
+                    data-tooltip-id="map-tooltip"
+                    data-tooltip-content={`${c.nom} : ${c.category}`}
+                    onClick={() => router.push(`/acheter-ou-louer/${c.code}`)}
+                    className="cursor-pointer transition-all duration-200 hover:opacity-80"
+                    onMouseEnter={(e) => { e.currentTarget.setAttribute('r', '5') }}
+                    onMouseLeave={(e) => { e.currentTarget.setAttribute('r', searchTerm ? '4' : '2') }}
+                  />
+                </Marker>
+              );
+            })}
+          </ZoomableGroup>
+        </ComposableMap>
+        
+        <Tooltip id="map-tooltip" style={{ backgroundColor: "#1e293b", color: "#fff", borderRadius: "8px", padding: "8px 12px", fontSize: "14px" }} />
       </div>
     </div>
   );
