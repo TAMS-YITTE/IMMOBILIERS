@@ -159,12 +159,12 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    fill="#f1f5f9"
-                    stroke="#cbd5e1"
-                    strokeWidth={0.5}
+                    fill="#f8fafc"
+                    stroke="#94a3b8"
+                    strokeWidth={1}
                     style={{
                       default: { outline: "none" },
-                      hover: { outline: "none", fill: "#e2e8f0" },
+                      hover: { outline: "none", fill: "#f1f5f9" },
                       pressed: { outline: "none" },
                     }}
                   />
