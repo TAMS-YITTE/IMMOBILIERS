@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Pilote de refonte visuelle : scope volontaire a la page d'accueil (SimulatorClient),
+   pas au body, tant que la direction n'est pas validee sur le reste du site. */
+.font-jakarta {
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}

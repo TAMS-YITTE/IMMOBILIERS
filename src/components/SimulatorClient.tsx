@@ -303,9 +303,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const currentCityName = communeMetrics[insee]?.nom || "Inconnu";
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 p-6 font-sans selection:bg-purple-500/30">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
+    <main className="relative min-h-screen bg-slate-950 text-slate-50 p-6 font-jakarta selection:bg-purple-500/30 overflow-hidden">
+      {/* Halos ambiants : profondeur en fond, purement decoratif (pilote de refonte visuelle) */}
+      <div className="absolute top-0 right-0 w-full lg:w-1/2 h-[600px] bg-purple-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-40 left-0 w-full lg:w-1/2 h-[500px] bg-blue-600/10 blur-[120px] pointer-events-none" />
+
+      <div className="relative max-w-7xl mx-auto space-y-8">
+
         <header className="text-center space-y-4 py-12">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
             Acheter ou Louer à {currentCityName} ?
@@ -599,11 +603,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Tableaux d&apos;amortissement complets</li>
                   <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> 100% anonyme, aucun appel</li>
                 </ul>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl py-3 transition-colors relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:shadow-[0_0_20px_theme(colors.cyan.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : "Acheter le rapport (4,99 €)"}
                 </button>
@@ -703,7 +707,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <button
                     type="submit"
                     disabled={leadSubmitting || !leadConsent}
-                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 mt-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-purple-500 to-fuchsia-400 hover:shadow-[0_0_20px_theme(colors.fuchsia.400/50%)] text-white font-medium rounded-full py-3 mt-4 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {leadSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Être recontacté gratuitement"}
                   </button>
