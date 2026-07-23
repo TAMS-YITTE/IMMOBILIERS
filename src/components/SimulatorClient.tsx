@@ -159,8 +159,8 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
   // Derived display value for the city input field
   const currentCity = communeMetrics[insee];
-  const displayValue = searchQuery !== null 
-    ? searchQuery 
+  const displayValue = searchQuery !== null
+    ? searchQuery
     : (currentCity ? `${currentCity.nom} (${currentCity.code_postal || insee})` : insee);
 
   // Click outside to close dropdown and reset query back to current city display
@@ -193,7 +193,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const simulationResult = useMemo(() => {
     const metrics = communeMetrics[insee];
     if (!metrics) return null;
-    
+
     const defaultProvisionReno = metrics.ratio_dpe_fg > 0.3 ? 30 : 15;
     const actualProvisionReno = customProvisionReno !== null ? customProvisionReno : defaultProvisionReno;
 
@@ -255,7 +255,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     try {
       setCheckoutLoading(true);
       const metrics = communeMetrics[insee];
-      
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -277,7 +277,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       });
 
       const data = await res.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -294,7 +294,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-purple-500">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-purple-600">
         <Loader2 className="animate-spin w-12 h-12" />
       </div>
     );
@@ -303,51 +303,51 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const currentCityName = communeMetrics[insee]?.nom || "Inconnu";
 
   return (
-    <main className="relative min-h-screen bg-slate-950 text-slate-50 p-6 font-jakarta selection:bg-purple-500/30 overflow-hidden">
+    <main className="relative min-h-screen bg-slate-50 text-slate-900 p-6 font-jakarta selection:bg-purple-200 overflow-hidden">
       {/* Halos ambiants : profondeur en fond, purement decoratif (pilote de refonte visuelle) */}
-      <div className="absolute top-0 right-0 w-full lg:w-1/2 h-[600px] bg-purple-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-40 left-0 w-full lg:w-1/2 h-[500px] bg-blue-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-full lg:w-1/2 h-[600px] bg-purple-300/25 blur-[120px] pointer-events-none" />
+      <div className="absolute top-40 left-0 w-full lg:w-1/2 h-[500px] bg-blue-300/25 blur-[120px] pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto space-y-8">
 
         <header className="text-center space-y-4 py-12">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Acheter ou Louer à {currentCityName} ?
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
             Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
           </p>
         </header>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8">
+        <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
           <div className="flex items-center gap-2 justify-center mb-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-lg md:text-xl font-semibold text-white text-center">
+            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-lg md:text-xl font-semibold text-slate-900 text-center">
               4 sources de données publiques officielles, pas une estimation
             </h2>
           </div>
-          <p className="text-sm text-slate-400 text-center max-w-2xl mx-auto mb-6">
+          <p className="text-sm text-slate-500 text-center max-w-2xl mx-auto mb-6">
             Contrairement aux simulateurs qui appliquent une moyenne nationale ou un forfait générique, chaque chiffre affiché ici vient directement d&apos;une base de données institutionnelle française, recalculée commune par commune.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
-              <TrendingUp className="w-6 h-6 text-purple-400" />
-              <span className="text-sm font-semibold text-white">Prix de vente réels</span>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <TrendingUp className="w-6 h-6 text-purple-600" />
+              <span className="text-sm font-semibold text-slate-900">Prix de vente réels</span>
               <span className="text-xs text-slate-500">DVF — DGFiP</span>
             </div>
-            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
-              <Leaf className="w-6 h-6 text-emerald-400" />
-              <span className="text-sm font-semibold text-white">Diagnostics énergétiques</span>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <Leaf className="w-6 h-6 text-emerald-600" />
+              <span className="text-sm font-semibold text-slate-900">Diagnostics énergétiques</span>
               <span className="text-xs text-slate-500">DPE — ADEME</span>
             </div>
-            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
-              <Landmark className="w-6 h-6 text-blue-400" />
-              <span className="text-sm font-semibold text-white">Fiscalité locale réelle</span>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <Landmark className="w-6 h-6 text-blue-600" />
+              <span className="text-sm font-semibold text-slate-900">Fiscalité locale réelle</span>
               <span className="text-xs text-slate-500">Taxe foncière — DGFiP</span>
             </div>
-            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-black/20 border border-white/5">
-              <KeyRound className="w-6 h-6 text-amber-400" />
-              <span className="text-sm font-semibold text-white">Loyers du marché</span>
+            <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <KeyRound className="w-6 h-6 text-amber-600" />
+              <span className="text-sm font-semibold text-slate-900">Loyers du marché</span>
               <span className="text-xs text-slate-500">ANIL — Min. du Logement</span>
             </div>
           </div>
@@ -356,19 +356,19 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         <CityPageNav codeInsee={insee} current="acheter-ou-louer" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
+
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-                <Home className="text-purple-400" />
+            <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-3xl p-8 shadow-sm">
+              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2 text-slate-900">
+                <Home className="text-purple-600" />
                 Votre Projet
               </h2>
-              
+
               <div className="space-y-5">
                 <div className="relative" ref={dropdownRef}>
-                  <label className="block text-sm font-medium text-slate-400 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-medium text-slate-500 mb-2 flex items-center gap-2">
                     Ville ciblée
-                    {fetchingCity && <Loader2 className="w-3 h-3 animate-spin text-purple-400" />}
+                    {fetchingCity && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
                   </label>
                   <div className="relative">
                     <input
@@ -380,7 +380,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                         setIsDropdownOpen(true);
                       }}
                       placeholder="Rechercher une ville ou un code postal..."
-                      className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-slate-500 pr-10"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 placeholder-slate-400 pr-10"
                     />
                     {isDropdownOpen && displayValue ? (
                       <button
@@ -389,19 +389,19 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                           setSearchQuery('');
                           setIsDropdownOpen(true);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                       >
                         <X size={16} />
                       </button>
                     ) : (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">
                         ▼
                       </div>
                     )}
                   </div>
 
                   {isDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50 divide-y divide-white/5">
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 divide-y divide-slate-100">
                       {filteredCommunes.length > 0 ? (
                         filteredCommunes.map((c) => (
                           <button
@@ -412,64 +412,64 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                               setSearchQuery(null);
                               setIsDropdownOpen(false);
                             }}
-                            className={`w-full text-left px-4 py-3 hover:bg-purple-500/20 transition-colors flex items-center justify-between text-sm ${
-                              c.code_insee === insee ? 'bg-purple-500/10 text-purple-300 font-medium' : 'text-slate-200'
+                            className={`w-full text-left px-4 py-3 hover:bg-purple-50 transition-colors flex items-center justify-between text-sm ${
+                              c.code_insee === insee ? 'bg-purple-50 text-purple-700 font-medium' : 'text-slate-700'
                             }`}
                           >
                             <span>{c.nom}</span>
-                            <span className="text-xs text-slate-500 font-mono">{c.code_postal || c.code_insee}</span>
+                            <span className="text-xs text-slate-400 font-mono">{c.code_postal || c.code_insee}</span>
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-3 text-sm text-slate-500 italic">
+                        <div className="px-4 py-3 text-sm text-slate-400 italic">
                           Aucune commune trouvée
                         </div>
                       )}
                     </div>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
-                  <button 
+                  <button
                     onClick={() => setTypeBien('appart')}
-                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'appart' ? 'bg-purple-500/20 border border-purple-500/50 text-purple-300' : 'bg-slate-800/50 border border-white/5 text-slate-400 hover:bg-white/5'}`}
+                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'appart' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:bg-slate-200'}`}
                   >
                     Appartement
                   </button>
-                  <button 
+                  <button
                     onClick={() => setTypeBien('maison')}
-                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'maison' ? 'bg-purple-500/20 border border-purple-500/50 text-purple-300' : 'bg-slate-800/50 border border-white/5 text-slate-400 hover:bg-white/5'}`}
+                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'maison' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:bg-slate-200'}`}
                   >
                     Maison
                   </button>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Surface (m²): {surface}</label>
-                  <input type="range" min="10" max="200" value={surface} onChange={(e) => setSurface(Number(e.target.value))} className="w-full accent-purple-500" />
+                  <label className="block text-sm font-medium text-slate-500 mb-2">Surface (m²): {surface}</label>
+                  <input type="range" min="10" max="200" value={surface} onChange={(e) => setSurface(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Apport personnel (€): {apport.toLocaleString()}</label>
-                  <input type="range" min="0" max="200000" step="5000" value={apport} onChange={(e) => setApport(Number(e.target.value))} className="w-full accent-purple-500" />
+                  <label className="block text-sm font-medium text-slate-500 mb-2">Apport personnel (€): {apport.toLocaleString()}</label>
+                  <input type="range" min="0" max="200000" step="5000" value={apport} onChange={(e) => setApport(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Taux du crédit (%): {tauxPret.toFixed(2)} %</label>
-                  <input type="range" min="1.0" max="7.0" step="0.1" value={tauxPret} onChange={(e) => setTauxPret(Number(e.target.value))} className="w-full accent-purple-500" />
+                  <label className="block text-sm font-medium text-slate-500 mb-2">Taux du crédit (%): {tauxPret.toFixed(2)} %</label>
+                  <input type="range" min="1.0" max="7.0" step="0.1" value={tauxPret} onChange={(e) => setTauxPret(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Durée du prêt (années): {dureePret}</label>
-                  <input type="range" min="5" max="30" step="1" value={dureePret} onChange={(e) => setDureePret(Number(e.target.value))} className="w-full accent-purple-500" />
+                  <label className="block text-sm font-medium text-slate-500 mb-2">Durée du prêt (années): {dureePret}</label>
+                  <input type="range" min="5" max="30" step="1" value={dureePret} onChange={(e) => setDureePret(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 {/* Section Options Avancées */}
-                <div className="pt-2 border-t border-white/10">
+                <div className="pt-2 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="w-full flex items-center justify-between py-2 text-sm font-medium text-purple-300 hover:text-purple-200 transition-colors"
+                    className="w-full flex items-center justify-between py-2 text-sm font-medium text-purple-700 hover:text-purple-600 transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       <Sliders size={16} />
@@ -481,38 +481,38 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   {showAdvanced && (
                     <div className="mt-4 space-y-4 pt-2">
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">
                           Taux d&apos;assurance emprunteur (%): {tauxAssurance.toFixed(2)} %
                         </label>
-                        <input type="range" min="0.0" max="1.0" step="0.05" value={tauxAssurance} onChange={(e) => setTauxAssurance(Number(e.target.value))} className="w-full accent-purple-500" />
+                        <input type="range" min="0.0" max="1.0" step="0.05" value={tauxAssurance} onChange={(e) => setTauxAssurance(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">
                           Frais d&apos;agence (%): {fraisAgence.toFixed(1)} %
                         </label>
-                        <input type="range" min="0.0" max="8.0" step="0.5" value={fraisAgence} onChange={(e) => setFraisAgence(Number(e.target.value))} className="w-full accent-purple-500" />
+                        <input type="range" min="0.0" max="8.0" step="0.5" value={fraisAgence} onChange={(e) => setFraisAgence(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">
                           Charges de copropriété (€/m²/an): {chargesCopro} €
                         </label>
-                        <input type="range" min="0" max="60" step="1" value={chargesCopro} onChange={(e) => setChargesCopro(Number(e.target.value))} className="w-full accent-purple-500" />
+                        <input type="range" min="0" max="60" step="1" value={chargesCopro} onChange={(e) => setChargesCopro(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">
                           Coût travaux / rénovation (€/m²/an): {customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)} €
                         </label>
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="80" 
-                          step="5" 
-                          value={customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)} 
-                          onChange={(e) => setCustomProvisionReno(Number(e.target.value))} 
-                          className="w-full accent-purple-500" 
+                        <input
+                          type="range"
+                          min="0"
+                          max="80"
+                          step="5"
+                          value={customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)}
+                          onChange={(e) => setCustomProvisionReno(Number(e.target.value))}
+                          className="w-full accent-purple-600"
                         />
                       </div>
                     </div>
@@ -523,19 +523,19 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 pointer-events-none" />
-              
+            <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 pointer-events-none" />
+
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10">
                 <div>
-                  <h3 className="text-xl font-medium text-slate-300">Évolution du Patrimoine Net</h3>
-                  <p className="text-sm text-slate-500 mt-1">Comparaison sur 25 ans (avec inflation)</p>
+                  <h3 className="text-xl font-medium text-slate-700">Évolution du Patrimoine Net</h3>
+                  <p className="text-sm text-slate-400 mt-1">Comparaison sur 25 ans (avec inflation)</p>
                 </div>
                 {simulationResult && (
-                  <div className={`mt-4 md:mt-0 border px-4 py-2 rounded-full font-medium flex items-center gap-2 ${simulationResult.bascule_annee ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-red-500/20 border-red-500/30 text-red-400'}`}>
+                  <div className={`mt-4 md:mt-0 border px-4 py-2 rounded-full font-medium flex items-center gap-2 ${simulationResult.bascule_annee ? 'bg-green-100 border-green-300 text-green-700' : 'bg-red-100 border-red-300 text-red-700'}`}>
                     <TrendingUp size={18} />
-                    {simulationResult.bascule_annee 
-                      ? `Achat rentable après ${simulationResult.bascule_annee} ans` 
+                    {simulationResult.bascule_annee
+                      ? `Achat rentable après ${simulationResult.bascule_annee} ans`
                       : `La location reste plus rentable`}
                   </div>
                 )}
@@ -545,17 +545,17 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 {simulationResult && (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={simulationResult.history} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff15" vertical={false} />
-                      <XAxis dataKey="year" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} tickFormatter={(value) => `${Math.round(value / 1000)}k`} width={80} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
-                        itemStyle={{ color: '#f8fafc' }}
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                      <XAxis dataKey="year" stroke="#64748b" tick={{ fill: '#64748b' }} />
+                      <YAxis stroke="#64748b" tick={{ fill: '#64748b' }} tickFormatter={(value) => `${Math.round(value / 1000)}k`} width={80} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}
+                        itemStyle={{ color: '#0f172a' }}
                         formatter={(value: unknown) => typeof value === 'number' ? [`${value.toLocaleString()} €`, undefined] : [String(value), undefined]}
                       />
                       <Legend />
-                      <Line type="monotone" name="Acheteur (Patrimoine immo - Dette)" dataKey="achat" stroke="#a855f7" strokeWidth={3} dot={false} activeDot={{ r: 8 }} />
-                      <Line type="monotone" name="Locataire (Épargne cumulée)" dataKey="location" stroke="#3b82f6" strokeWidth={3} dot={false} />
+                      <Line type="monotone" name="Acheteur (Patrimoine immo - Dette)" dataKey="achat" stroke="#9333ea" strokeWidth={3} dot={false} activeDot={{ r: 8 }} />
+                      <Line type="monotone" name="Locataire (Épargne cumulée)" dataKey="location" stroke="#2563eb" strokeWidth={3} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -563,51 +563,51 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              <div className="bg-gradient-to-b from-slate-800/80 to-slate-900 border border-purple-500/30 rounded-3xl p-6 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-purple-500/5 group-hover:bg-purple-500/10 transition-colors" />
-                <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                  <Wallet className="text-purple-400" />
+
+              <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
+                <div className="absolute inset-0 bg-purple-500/0 group-hover:bg-purple-500/5 transition-colors" />
+                <h4 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <Wallet className="text-purple-600" />
                   Passez à l&apos;action
                 </h4>
-                <p className="text-sm text-slate-400 mb-6">
-                  Vos mensualités estimées sont de <strong className="text-purple-300">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
+                <p className="text-sm text-slate-500 mb-6">
+                  Vos mensualités estimées sont de <strong className="text-purple-700">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
                 </p>
                 <div className="space-y-4 relative z-10">
-                  <div className="flex items-start gap-3 bg-black/20 p-3 rounded-lg border border-white/5">
-                    <CheckCircle2 className="text-purple-500 shrink-0 mt-0.5" size={16} />
-                    <p className="text-xs text-slate-400 leading-tight">
+                  <div className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200">
+                    <CheckCircle2 className="text-purple-600 shrink-0 mt-0.5" size={16} />
+                    <p className="text-xs text-slate-500 leading-tight">
                       Mise en relation gratuite et sans engagement avec les meilleurs courtiers de votre région.
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setShowLeadModal(true)}
-                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl py-3 transition-colors"
+                    className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150"
                   >
                     Trouver mon financement
                   </button>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-b from-slate-800/80 to-slate-900 border border-blue-500/30 rounded-3xl p-6 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors" />
-                <h4 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                  <FileText className="text-blue-400" />
+              <div className="bg-gradient-to-b from-blue-50 to-white border border-blue-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
+                <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/5 transition-colors" />
+                <h4 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <FileText className="text-blue-600" />
                   Rapport Détaillé
                 </h4>
-                <p className="text-sm text-slate-400 mb-6">
+                <p className="text-sm text-slate-500 mb-6">
                   Analysez les chiffres en profondeur sans être démarché. Téléchargez notre rapport PDF.
                 </p>
-                <ul className="space-y-2 mb-6 text-sm text-slate-300">
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Comparaison de 3 scénarios</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> Tableaux d&apos;amortissement complets</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-400"/> 100% anonyme, aucun appel</li>
+                <ul className="space-y-2 mb-6 text-sm text-slate-600">
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> Comparaison de 3 scénarios</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> Tableaux d&apos;amortissement complets</li>
+                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> 100% anonyme, aucun appel</li>
                 </ul>
                 <button
                   type="button"
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 hover:shadow-[0_0_20px_theme(colors.cyan.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_20px_theme(colors.cyan.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : "Acheter le rapport (4,99 €)"}
                 </button>
@@ -620,22 +620,22 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
       {/* Modale de Contact B2B */}
       {showLeadModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
-            <button 
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
+            <button
               onClick={() => setShowLeadModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
             >
               <X size={24} />
             </button>
-            
+
             {leadSuccess ? (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Demande envoyée !</h3>
-                <p className="text-slate-400">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Demande envoyée !</h3>
+                <p className="text-slate-500">
                   Un de nos courtiers partenaires spécialisés sur {currentCityName} va vous recontacter très vite pour votre projet.
                 </p>
                 <button
@@ -646,18 +646,18 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                     setLeadEmail('');
                     setLeadPhone('');
                   }}
-                  className="mt-8 bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-2 rounded-xl transition-colors"
+                  className="mt-8 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-6 py-2 rounded-xl transition-colors"
                 >
                   Fermer
                 </button>
               </div>
             ) : (
               <>
-                <h3 className="text-2xl font-bold text-white mb-2">Étude de financement</h3>
-                <p className="text-slate-400 mb-6 text-sm">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Étude de financement</h3>
+                <p className="text-slate-500 mb-6 text-sm">
                   Laissez vos coordonnées pour qu&apos;un expert vous aide à obtenir votre prêt de {simulationResult?.mensualite_banque_estimee?.toLocaleString()} € / mois.
                 </p>
-                
+
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
                   {/* Honeypot field for bot protection */}
                   <input
@@ -670,36 +670,36 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                     className="opacity-0 absolute -z-10 h-0 w-0 pointer-events-none"
                   />
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
-                    <input 
-                      type="email" 
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                    <input
+                      type="email"
                       required
                       value={leadEmail}
                       onChange={e => setLeadEmail(e.target.value)}
-                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="vous@email.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Téléphone</label>
-                    <input 
-                      type="tel" 
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
+                    <input
+                      type="tel"
                       value={leadPhone}
                       onChange={e => setLeadPhone(e.target.value)}
-                      className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="06 12 34 56 78"
                     />
                   </div>
 
-                  <div className="flex items-start gap-3 bg-black/20 p-3 rounded-lg border border-white/5">
+                  <div className="flex items-start gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <input
                       type="checkbox"
                       id="lead-consent"
                       checked={leadConsent}
                       onChange={(e) => setLeadConsent(e.target.checked)}
-                      className="mt-1 accent-purple-500 w-4 h-4"
+                      className="mt-1 accent-purple-600 w-4 h-4"
                     />
-                    <label htmlFor="lead-consent" className="text-xs text-slate-400 leading-tight">
+                    <label htmlFor="lead-consent" className="text-xs text-slate-500 leading-tight">
                       J&apos;accepte d&apos;être recontacté(e) gratuitement par un courtier partenaire pour une étude personnalisée de mon financement.
                     </label>
                   </div>
@@ -707,7 +707,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <button
                     type="submit"
                     disabled={leadSubmitting || !leadConsent}
-                    className="w-full bg-gradient-to-r from-purple-500 to-fuchsia-400 hover:shadow-[0_0_20px_theme(colors.fuchsia.400/50%)] text-white font-medium rounded-full py-3 mt-4 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.fuchsia.400/50%)] text-white font-medium rounded-full py-3 mt-4 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {leadSubmitting ? <Loader2 className="animate-spin" size={20} /> : "Être recontacté gratuitement"}
                   </button>
