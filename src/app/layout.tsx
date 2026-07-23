@@ -20,9 +20,28 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kalcul.app';
+
 export const metadata: Metadata = {
-  title: "Simulateur Achat vs Location | Immobilier",
-  description: "Calculez précisément quand l'achat devient plus rentable que la location dans votre ville avec des données réelles.",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "Kalcul.app | Simulateur Achat vs Location Immobilier",
+    template: "%s | Kalcul.app"
+  },
+  description: "Calculez précisément quand l'achat immobilier devient plus rentable que la location dans votre ville avec des données ouvertes de l'État.",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: baseUrl,
+    title: "Kalcul.app | Intelligence Immobilière",
+    description: "La première plateforme d'intelligence immobilière pour les particuliers. Simulez, comparez et investissez en toute transparence.",
+    siteName: "Kalcul.app",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kalcul.app | Intelligence Immobilière",
+    description: "La première plateforme d'intelligence immobilière pour les particuliers. Simulez et comparez.",
+  },
 };
 
 import Navbar from "@/components/Navbar";

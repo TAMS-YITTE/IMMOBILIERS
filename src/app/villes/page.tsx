@@ -1,5 +1,11 @@
+import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import VillesClient from "./VillesClient";
+
+export const metadata: Metadata = {
+  title: "Annuaire des Villes",
+  description: "Explorez l'annuaire complet des communes françaises pour découvrir où l'achat immobilier est plus rentable que la location.",
+};
 
 // Using Next.js ISR (revalidate every hour)
 export const revalidate = 3600;

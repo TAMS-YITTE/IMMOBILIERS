@@ -1,5 +1,11 @@
+import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import ComparerClient from "@/components/ComparerClient";
+
+export const metadata: Metadata = {
+  title: "Comparateur de Villes",
+  description: "Comparez jusqu'à 3 villes simultanément pour trouver la meilleure opportunité d'achat ou de location immobilière.",
+};
 
 export const revalidate = 3600;
 

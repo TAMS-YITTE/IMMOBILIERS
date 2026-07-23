@@ -1,5 +1,11 @@
+import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import CarteClient from "@/components/CarteClient";
+
+export const metadata: Metadata = {
+  title: "Carte Thermique",
+  description: "Visualisez les zones où l'achat immobilier devient rentable le plus rapidement en France sur notre carte interactive.",
+};
 
 export const revalidate = 86400; // 24 hours ISR
 
