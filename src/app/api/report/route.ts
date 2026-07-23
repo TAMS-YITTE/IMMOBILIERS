@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { jsPDF } from 'jspdf';
 import { supabase } from '@/lib/supabaseClient';
-import { simulateBuyVsRent, calculateAmortizationSchedule } from '@/lib/calculator';
+import { simulateBuyVsRent, calculateAmortizationSchedule, calculateMonthlyMortgage } from '@/lib/calculator';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -34,7 +34,7 @@ function formatEuro(amount: any) {
   return groupThousands(amount) + ' €';
 }
 
-function generatePDFBuffer(communeName: string, data: any, simResult: any, userParams: any): ArrayBuffer {
+function generatePDFBuffer(communeName: string, codeInsee: string, data: any, simResult: any, userParams: any): ArrayBuffer {
   const doc = new jsPDF();
   
   // Variables de simulation (respecte le type de bien choisi : appartement ou maison)
@@ -44,11 +44,24 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   
   const prixTotal = prixM2 * surface;
   const fraisNotaire = prixTotal * 0.08;
+  const fraisAgenceTaux = Number(userParams.fraisAgence) / 100;
+  const fraisAgenceEuro = prixTotal * fraisAgenceTaux;
   const apport = Number(userParams.apport);
 
   const ratioPassoires = Number(data.ratio_dpe_fg) || 0;
   const renoCostPerM2 = ratioPassoires > 0.35 ? 1200 : (ratioPassoires > 0.15 ? 750 : 400);
   const budgetRenoEstime = surface * renoCostPerM2;
+
+  // Detail de la mensualite (le moteur ne renvoie que le total credit+assurance ; on
+  // recalcule les autres postes ici avec les memes formules que calculator.ts pour les
+  // afficher separement et justifier le chiffre au lieu d'une seule ligne opaque).
+  const montantEmprunte = Number(simResult.montant_emprunte) || 0;
+  const mensualiteCredit = calculateMonthlyMortgage(montantEmprunte, Number(userParams.tauxPret), Number(userParams.dureePret));
+  const assuranceMensuelle = (montantEmprunte * (Number(userParams.tauxAssurance) / 100)) / 12;
+  const chargesCoproMensuelle = (Number(userParams.chargesCopro) * surface) / 12;
+  const provisionMensuelle = (Number(userParams.provisionReno) * surface) / 12;
+  const taxeFonciereMensuelle = (Number(data.taxe_fonciere_moyenne) || 0) / 12;
+  const mensualiteTotale = mensualiteCredit + assuranceMensuelle + chargesCoproMensuelle + provisionMensuelle + taxeFonciereMensuelle;
 
   // PAGE 1: Synthèse & Données de base
   doc.setFillColor(15, 23, 42); 
@@ -93,22 +106,29 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
   doc.setFontSize(12);
   doc.setTextColor(30, 41, 59);
   doc.text(`• Taux du prêt : ${(Number(userParams.tauxPret) * 100).toFixed(2)} % sur ${userParams.dureePret} ans`, 25, 165);
-  doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 175);
-  doc.text(`• Mensualité bancaire estimée : ${formatEuro(simResult.mensualite_banque_estimee)} / mois`, 25, 185);
+  doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 173);
+  doc.text(`• Frais d'agence (${Number(userParams.fraisAgence).toFixed(1)} %) : ${formatEuro(fraisAgenceEuro)}`, 25, 181);
+  doc.text(`• Assurance emprunteur (${Number(userParams.tauxAssurance).toFixed(2)} %) : ${formatEuro(assuranceMensuelle)} / mois`, 25, 189);
+  doc.text(`• Charges de copropriété : ${formatEuro(chargesCoproMensuelle)} / mois`, 25, 197);
+  doc.text(`• Provision travaux / rénovation : ${formatEuro(provisionMensuelle)} / mois`, 25, 205);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`• Mensualité totale estimée (crédit + assurance + charges + taxe) : ${formatEuro(mensualiteTotale)} / mois`, 25, 215);
+  doc.setFont('helvetica', 'normal');
 
   // Conclusion Page 1
   doc.setFillColor(248, 250, 252);
-  doc.rect(20, 200, 170, 35, 'F');
+  doc.rect(20, 224, 170, 45, 'F');
   doc.setFontSize(13);
   doc.setTextColor(15, 23, 42);
-  doc.text('Verdict : Acheter ou Louer ?', 25, 212);
+  doc.text('Verdict : Acheter ou Louer ?', 25, 236);
 
   doc.setFontSize(11);
   doc.setTextColor(71, 85, 105);
   const textConclusion = simResult.bascule_annee
     ? `Selon votre profil, l'investissement immobilier sur cet appartement devient mathématiquement plus rentable que la location après une détention de ${simResult.bascule_annee} ans.`
     : `Attention, selon vos critères, la location reste mathématiquement plus avantageuse que l'achat sur l'ensemble de la période simulée (25 ans).`;
-  doc.text(doc.splitTextToSize(textConclusion, 160), 25, 222);
+  doc.text(doc.splitTextToSize(textConclusion, 160), 25, 246);
 
   // PAGE 2: Scénarios & Risques
   doc.addPage();
@@ -237,6 +257,24 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
       const y2 = mapY(hist[i + 1].location);
       doc.line(x1, y1, x2, y2);
     }
+
+    // Marqueur du point de bascule (annee a partir de laquelle l'achat devient plus
+    // rentable) : sans ca le graphique montre juste deux courbes qui se croisent quelque
+    // part, sans dire explicitement ou / quand par rapport au verdict du texte page 1.
+    if (simResult.bascule_annee) {
+      const basculeIdx = Number(simResult.bascule_annee) - 1;
+      if (basculeIdx >= 0 && basculeIdx <= numPoints - 1) {
+        const bx = mapX(basculeIdx);
+        doc.setDrawColor(234, 179, 8);
+        doc.setLineWidth(0.8);
+        doc.setLineDashPattern([2, 1.5], 0);
+        doc.line(bx, gY, bx, gY + gHeight);
+        doc.setLineDashPattern([], 0);
+        doc.setFontSize(8);
+        doc.setTextColor(161, 98, 7);
+        doc.text(`Bascule : ${simResult.bascule_annee} ans`, bx + 2, gY + 8);
+      }
+    }
   }
 
   // Section 4: Tableau d'amortissement
@@ -298,6 +336,26 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
     yPosT += 10;
   }
 
+  // Total des interets payes sur la duree : le tableau ligne par ligne ne donne jamais
+  // le cout reel du credit d'un coup d'oeil, seulement des variations d'une annee a l'autre.
+  const totalInterets = amortissement.reduce((sum: number, l: { interetsAnnuels: number }) => sum + l.interetsAnnuels, 0);
+  if (yPosT > 270) {
+    doc.addPage();
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 210, 25, 'F');
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
+    yPosT = 45;
+  }
+  doc.setFillColor(248, 250, 252);
+  doc.rect(20, yPosT, 170, 15, 'F');
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(`Coût total du crédit sur ${userParams.dureePret} ans (intérêts payés) : ${formatEuro(totalInterets)}`, 25, yPosT + 9);
+  doc.setFont('helvetica', 'normal');
+
   // Section: Risque Loi Climat
   doc.addPage();
   doc.setFillColor(15, 23, 42); 
@@ -326,6 +384,32 @@ function generatePDFBuffer(communeName: string, data: any, simResult: any, userP
     doc.setTextColor(71, 85, 105);
     doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 75);
   }
+
+  // Section 6: Fiabilite des donnees & liens utiles
+  doc.setFontSize(14);
+  doc.setTextColor(139, 92, 246);
+  doc.text('6. Fiabilité des données & pour aller plus loin', 20, 100);
+
+  doc.setFontSize(10);
+  doc.setTextColor(71, 85, 105);
+  const fiabilite = data.fiabilite_score !== null && data.fiabilite_score !== undefined ? `${data.fiabilite_score}/10` : 'non disponible';
+  doc.text(doc.splitTextToSize(
+    `Ce rapport s'appuie sur 4 sources de données publiques officielles pour ${communeName} : prix au m² (DVF), ` +
+    `diagnostics de performance énergétique (ADEME), taxe foncière (DGFiP) et loyers de marché (ANIL/DHUP). ` +
+    `Score de fiabilité des données pour cette commune : ${fiabilite}.`,
+    170
+  ), 20, 110);
+
+  doc.setFontSize(11);
+  doc.setTextColor(30, 41, 59);
+  doc.text('Consultez le détail en ligne, mis à jour automatiquement :', 20, 135);
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kalcul.app';
+  doc.setFontSize(10);
+  doc.setTextColor(37, 99, 235);
+  doc.textWithLink('- Revoir et ajuster cette simulation en ligne', 20, 145, { url: `${baseUrl}/acheter-ou-louer/${codeInsee}` });
+  doc.textWithLink('- Détail de la taxe foncière à ' + communeName, 20, 153, { url: `${baseUrl}/taxe-fonciere/${codeInsee}` });
+  doc.textWithLink('- État du parc énergétique (DPE) à ' + communeName, 20, 161, { url: `${baseUrl}/renovation-energetique/${codeInsee}` });
 
   // Footer
   doc.setFontSize(10);
@@ -371,12 +455,26 @@ export async function GET(request: Request) {
       if (metrics) data = metrics;
     }
 
+    const ratioDpeFg = Number(data.ratio_dpe_fg) || 0;
+    const defaultProvisionReno = ratioDpeFg > 0.3 ? 30 : 15;
+
     const userParams = {
       surface: Number(session.metadata?.surface) || 60,
       apport: Number(session.metadata?.apport) || 0,
       typeBien: session.metadata?.typeBien === 'maison' ? 'maison' : 'appart',
       tauxPret: session.metadata?.tauxPret ? Number(session.metadata.tauxPret) / 100 : 0.035,
       dureePret: Number(session.metadata?.dureePret) || 25,
+      // Options avancees : transmises depuis les curseurs du simulateur via les metadata
+      // Stripe (checkout/route.ts). Sans elles, le rapport recalculait avec les valeurs par
+      // defaut du moteur au lieu de ce que le client avait reellement configure et paye.
+      tauxAssurance: session.metadata?.tauxAssurance !== undefined && session.metadata.tauxAssurance !== ''
+        ? Number(session.metadata.tauxAssurance) : 0.3,
+      fraisAgence: session.metadata?.fraisAgence !== undefined && session.metadata.fraisAgence !== ''
+        ? Number(session.metadata.fraisAgence) : 0,
+      chargesCopro: session.metadata?.chargesCopro !== undefined && session.metadata.chargesCopro !== ''
+        ? Number(session.metadata.chargesCopro) : 25,
+      provisionReno: session.metadata?.provisionReno !== undefined && session.metadata.provisionReno !== ''
+        ? Number(session.metadata.provisionReno) : defaultProvisionReno,
     };
 
     // Simulate using the calculator (respecte le type de bien choisi par l'utilisateur,
@@ -385,17 +483,21 @@ export async function GET(request: Request) {
       prix_m2: Number(userParams.typeBien === 'appart' ? data.prix_m2_appart_moyen : data.prix_m2_maison_moyen) || 0,
       loyer_m2: Number(userParams.typeBien === 'appart' ? data.loyer_m2_appart_moyen : data.loyer_m2_maison_moyen) || 0,
       taxe_fonciere_annuelle: Number(data.taxe_fonciere_moyenne) || 0,
-      ratio_dpe_fg: Number(data.ratio_dpe_fg) || 0,
+      ratio_dpe_fg: ratioDpeFg,
       surface: userParams.surface,
       apport: userParams.apport,
       taux_pret: userParams.tauxPret,
-      duree_pret_annees: userParams.dureePret
+      duree_pret_annees: userParams.dureePret,
+      taux_assurance: userParams.tauxAssurance / 100,
+      frais_agence_taux: userParams.fraisAgence / 100,
+      charges_copro_m2_an: userParams.chargesCopro,
+      provision_renovation_m2_an: userParams.provisionReno,
     };
 
     const simResult = simulateBuyVsRent(simParams);
 
     // 3. Generate the PDF
-    const pdfBuffer = generatePDFBuffer(communeName, data, simResult, userParams);
+    const pdfBuffer = generatePDFBuffer(communeName, codeInsee || '', data, simResult, userParams);
 
     // 4. Return as a downloadable file
     return new NextResponse(pdfBuffer, {
