@@ -7,7 +7,7 @@ import { Lock, RefreshCw, FileText } from 'lucide-react';
 interface Rapport {
   id: string;
   email: string;
-  code_insee: string;
+  code_insee_recherche: string;
   montant_paye: number;
   stripe_session_id: string;
   statut: string | null;
@@ -147,7 +147,7 @@ export default function AdminRapportsPage() {
                     })}
                   </td>
                   <td className="px-6 py-4 font-semibold text-white">{r.email}</td>
-                  <td className="px-6 py-4 font-mono">{r.code_insee}</td>
+                  <td className="px-6 py-4 font-mono">{r.code_insee_recherche}</td>
                   <td className="px-6 py-4 font-semibold text-purple-300">
                     {(r.montant_paye || 0).toFixed(2)} €
                   </td>

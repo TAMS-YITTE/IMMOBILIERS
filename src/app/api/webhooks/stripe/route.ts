@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     try {
       const { error } = await supabaseAdmin.from('rapports_pdf').insert({
         email,
-        code_insee: codeInsee,
+        code_insee_recherche: codeInsee,
         montant_paye: montantPaye,
         stripe_session_id: stripeSessionId,
         statut: 'paye',
