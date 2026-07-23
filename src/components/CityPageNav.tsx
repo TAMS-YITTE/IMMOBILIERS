@@ -20,8 +20,8 @@ export default function CityPageNav({ codeInsee, current }: { codeInsee: string;
             href={`/${slug}/${codeInsee}`}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               active
-                ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
-                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+                ? 'bg-purple-100 border-purple-300 text-purple-700'
+                : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Icon size={13} />

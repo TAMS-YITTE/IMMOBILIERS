@@ -314,7 +314,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Acheter ou Louer à {currentCityName} ?
           </h1>
-          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
             Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
           </p>
         </header>
@@ -326,29 +326,29 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               4 sources de données publiques officielles, pas une estimation
             </h2>
           </div>
-          <p className="text-sm text-slate-500 text-center max-w-2xl mx-auto mb-6">
+          <p className="text-sm text-slate-600 text-center max-w-2xl mx-auto mb-6">
             Contrairement aux simulateurs qui appliquent une moyenne nationale ou un forfait générique, chaque chiffre affiché ici vient directement d&apos;une base de données institutionnelle française, recalculée commune par commune.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
               <TrendingUp className="w-6 h-6 text-purple-600" />
               <span className="text-sm font-semibold text-slate-900">Prix de vente réels</span>
-              <span className="text-xs text-slate-500">DVF — DGFiP</span>
+              <span className="text-xs text-slate-600">DVF — DGFiP</span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
               <Leaf className="w-6 h-6 text-emerald-600" />
               <span className="text-sm font-semibold text-slate-900">Diagnostics énergétiques</span>
-              <span className="text-xs text-slate-500">DPE — ADEME</span>
+              <span className="text-xs text-slate-600">DPE — ADEME</span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
               <Landmark className="w-6 h-6 text-blue-600" />
               <span className="text-sm font-semibold text-slate-900">Fiscalité locale réelle</span>
-              <span className="text-xs text-slate-500">Taxe foncière — DGFiP</span>
+              <span className="text-xs text-slate-600">Taxe foncière — DGFiP</span>
             </div>
             <div className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
               <KeyRound className="w-6 h-6 text-amber-600" />
               <span className="text-sm font-semibold text-slate-900">Loyers du marché</span>
-              <span className="text-xs text-slate-500">ANIL — Min. du Logement</span>
+              <span className="text-xs text-slate-600">ANIL — Min. du Logement</span>
             </div>
           </div>
         </div>
@@ -366,7 +366,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
               <div className="space-y-5">
                 <div className="relative" ref={dropdownRef}>
-                  <label className="block text-sm font-medium text-slate-500 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-medium text-slate-600 mb-2 flex items-center gap-2">
                     Ville ciblée
                     {fetchingCity && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
                   </label>
@@ -389,12 +389,12 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                           setSearchQuery('');
                           setIsDropdownOpen(true);
                         }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                       >
                         <X size={16} />
                       </button>
                     ) : (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none text-xs">
                         ▼
                       </div>
                     )}
@@ -417,11 +417,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                             }`}
                           >
                             <span>{c.nom}</span>
-                            <span className="text-xs text-slate-400 font-mono">{c.code_postal || c.code_insee}</span>
+                            <span className="text-xs text-slate-500 font-mono">{c.code_postal || c.code_insee}</span>
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-3 text-sm text-slate-400 italic">
+                        <div className="px-4 py-3 text-sm text-slate-500 italic">
                           Aucune commune trouvée
                         </div>
                       )}
@@ -432,35 +432,35 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setTypeBien('appart')}
-                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'appart' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:bg-slate-200'}`}
+                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'appart' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200'}`}
                   >
                     Appartement
                   </button>
                   <button
                     onClick={() => setTypeBien('maison')}
-                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'maison' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-500 hover:bg-slate-200'}`}
+                    className={`rounded-xl py-3 font-medium transition-colors ${typeBien === 'maison' ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200'}`}
                   >
                     Maison
                   </button>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-2">Surface (m²): {surface}</label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">Surface (m²): {surface}</label>
                   <input type="range" min="10" max="200" value={surface} onChange={(e) => setSurface(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-2">Apport personnel (€): {apport.toLocaleString()}</label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">Apport personnel (€): {apport.toLocaleString()}</label>
                   <input type="range" min="0" max="200000" step="5000" value={apport} onChange={(e) => setApport(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-2">Taux du crédit (%): {tauxPret.toFixed(2)} %</label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">Taux du crédit (%): {tauxPret.toFixed(2)} %</label>
                   <input type="range" min="1.0" max="7.0" step="0.1" value={tauxPret} onChange={(e) => setTauxPret(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 mb-2">Durée du prêt (années): {dureePret}</label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">Durée du prêt (années): {dureePret}</label>
                   <input type="range" min="5" max="30" step="1" value={dureePret} onChange={(e) => setDureePret(Number(e.target.value))} className="w-full accent-purple-600" />
                 </div>
 
@@ -481,28 +481,28 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   {showAdvanced && (
                     <div className="mt-4 space-y-4 pt-2">
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
                           Taux d&apos;assurance emprunteur (%): {tauxAssurance.toFixed(2)} %
                         </label>
                         <input type="range" min="0.0" max="1.0" step="0.05" value={tauxAssurance} onChange={(e) => setTauxAssurance(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
                           Frais d&apos;agence (%): {fraisAgence.toFixed(1)} %
                         </label>
                         <input type="range" min="0.0" max="8.0" step="0.5" value={fraisAgence} onChange={(e) => setFraisAgence(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
                           Charges de copropriété (€/m²/an): {chargesCopro} €
                         </label>
                         <input type="range" min="0" max="60" step="1" value={chargesCopro} onChange={(e) => setChargesCopro(Number(e.target.value))} className="w-full accent-purple-600" />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">
                           Coût travaux / rénovation (€/m²/an): {customProvisionReno !== null ? customProvisionReno : (communeMetrics[insee]?.ratio_dpe_fg > 0.3 ? 30 : 15)} €
                         </label>
                         <input
@@ -529,7 +529,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10">
                 <div>
                   <h3 className="text-xl font-medium text-slate-700">Évolution du Patrimoine Net</h3>
-                  <p className="text-sm text-slate-400 mt-1">Comparaison sur 25 ans (avec inflation)</p>
+                  <p className="text-sm text-slate-500 mt-1">Comparaison sur 25 ans (avec inflation)</p>
                 </div>
                 {simulationResult && (
                   <div className={`mt-4 md:mt-0 border px-4 py-2 rounded-full font-medium flex items-center gap-2 ${simulationResult.bascule_annee ? 'bg-green-100 border-green-300 text-green-700' : 'bg-red-100 border-red-300 text-red-700'}`}>
@@ -570,13 +570,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <Wallet className="text-purple-600" />
                   Passez à l&apos;action
                 </h4>
-                <p className="text-sm text-slate-500 mb-6">
+                <p className="text-sm text-slate-600 mb-6">
                   Vos mensualités estimées sont de <strong className="text-purple-700">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
                 </p>
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200">
                     <CheckCircle2 className="text-purple-600 shrink-0 mt-0.5" size={16} />
-                    <p className="text-xs text-slate-500 leading-tight">
+                    <p className="text-xs text-slate-600 leading-tight">
                       Mise en relation gratuite et sans engagement avec les meilleurs courtiers de votre région.
                     </p>
                   </div>
@@ -595,7 +595,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <FileText className="text-blue-600" />
                   Rapport Détaillé
                 </h4>
-                <p className="text-sm text-slate-500 mb-6">
+                <p className="text-sm text-slate-600 mb-6">
                   Analysez les chiffres en profondeur sans être démarché. Téléchargez notre rapport PDF.
                 </p>
                 <ul className="space-y-2 mb-6 text-sm text-slate-600">
@@ -624,7 +624,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button
               onClick={() => setShowLeadModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700"
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-700"
             >
               <X size={24} />
             </button>
@@ -635,7 +635,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Demande envoyée !</h3>
-                <p className="text-slate-500">
+                <p className="text-slate-600">
                   Un de nos courtiers partenaires spécialisés sur {currentCityName} va vous recontacter très vite pour votre projet.
                 </p>
                 <button
@@ -654,7 +654,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             ) : (
               <>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Étude de financement</h3>
-                <p className="text-slate-500 mb-6 text-sm">
+                <p className="text-slate-600 mb-6 text-sm">
                   Laissez vos coordonnées pour qu&apos;un expert vous aide à obtenir votre prêt de {simulationResult?.mensualite_banque_estimee?.toLocaleString()} € / mois.
                 </p>
 
@@ -699,7 +699,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                       onChange={(e) => setLeadConsent(e.target.checked)}
                       className="mt-1 accent-purple-600 w-4 h-4"
                     />
-                    <label htmlFor="lead-consent" className="text-xs text-slate-500 leading-tight">
+                    <label htmlFor="lead-consent" className="text-xs text-slate-600 leading-tight">
                       J&apos;accepte d&apos;être recontacté(e) gratuitement par un courtier partenaire pour une étude personnalisée de mon financement.
                     </label>
                   </div>
