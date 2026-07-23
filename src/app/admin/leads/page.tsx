@@ -77,13 +77,13 @@ export default function AdminLeadsPage() {
 
   if (!authenticated) {
     return (
-      <main className="min-h-screen bg-slate-950 flex items-center justify-center p-6 text-white">
-        <div className="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-md w-full shadow-2xl">
-          <div className="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto mb-4">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900">
+        <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-md w-full shadow-lg">
+          <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Lock size={24} />
           </div>
           <h1 className="text-2xl font-bold text-center mb-2">Espace Admin - Leads</h1>
-          <p className="text-sm text-slate-400 text-center mb-6">
+          <p className="text-sm text-slate-500 text-center mb-6">
             Entrez le mot de passe d&apos;administration pour accéder au tableau de bord des courtiers.
           </p>
 
@@ -93,13 +93,13 @@ export default function AdminLeadsPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe"
-              className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
-            {errorMsg && <p className="text-red-400 text-xs text-center">{errorMsg}</p>}
+            {errorMsg && <p className="text-red-600 text-xs text-center">{errorMsg}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium py-3 rounded-full transition-all duration-150 disabled:opacity-50"
             >
               {loading ? 'Vérification...' : 'Se connecter'}
             </button>
@@ -110,13 +110,13 @@ export default function AdminLeadsPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto p-6 py-12 text-white">
+    <main className="max-w-7xl mx-auto p-6 py-12 text-slate-900">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Tableau de Bord des Leads
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             {leads.length} prospect(s) qualifié(s) enregistré(s)
           </p>
         </div>
@@ -124,13 +124,13 @@ export default function AdminLeadsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/rapports"
-            className="flex items-center gap-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-xs text-slate-300 px-4 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-100 text-xs text-slate-600 px-4 py-2 rounded-full transition-colors shadow-sm"
           >
             Voir les Ventes
           </Link>
           <button
             onClick={() => fetchLeads(password)}
-            className="flex items-center gap-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-xs text-slate-300 px-4 py-2 rounded-xl transition-colors"
+            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-100 text-xs text-slate-600 px-4 py-2 rounded-full transition-colors shadow-sm"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             Actualiser
@@ -138,10 +138,10 @@ export default function AdminLeadsPage() {
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-950 border-b border-white/10 text-xs uppercase text-slate-400">
+          <table className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
               <tr>
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Contact</th>
@@ -150,10 +150,10 @@ export default function AdminLeadsPage() {
                 <th className="px-6 py-4">Statut</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-slate-100">
               {leads.map((l) => (
-                <tr key={l.id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4 text-xs font-mono text-slate-400">
+                <tr key={l.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-xs font-mono text-slate-500">
                     {new Date(l.created_at).toLocaleDateString('fr-FR', {
                       day: '2-digit',
                       month: '2-digit',
@@ -163,18 +163,18 @@ export default function AdminLeadsPage() {
                     })}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-white">{l.email}</div>
-                    <div className="text-xs text-slate-400 font-mono">{l.telephone || 'Non renseigné'}</div>
+                    <div className="font-semibold text-slate-900">{l.email}</div>
+                    <div className="text-xs text-slate-500 font-mono">{l.telephone || 'Non renseigné'}</div>
                   </td>
                   <td className="px-6 py-4 font-mono">{l.code_insee_recherche}</td>
-                  <td className="px-6 py-4 font-semibold text-purple-300">
+                  <td className="px-6 py-4 font-semibold text-purple-700">
                     {Math.round(l.montant_projet).toLocaleString('fr-FR')} €
                   </td>
                   <td className="px-6 py-4">
                     <select
                       value={l.statut || 'nouveau'}
                       onChange={(e) => updateStatut(l.id, e.target.value)}
-                      className="bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="nouveau">Nouveau</option>
                       <option value="contacte">Contacté</option>
@@ -187,7 +187,7 @@ export default function AdminLeadsPage() {
 
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">
                     Aucun lead enregistré pour le moment.
                   </td>
                 </tr>

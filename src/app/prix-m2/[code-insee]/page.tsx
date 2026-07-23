@@ -42,10 +42,10 @@ export default async function PrixM2Page({ params }: Props) {
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+      <main className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Ville Introuvable</h1>
-          <p className="text-slate-400">Nous n&apos;avons pas encore de données pour le code INSEE {insee}.</p>
+          <p className="text-slate-500">Nous n&apos;avons pas encore de données pour le code INSEE {insee}.</p>
         </div>
       </main>
     );
@@ -54,13 +54,13 @@ export default async function PrixM2Page({ params }: Props) {
   const cityName = data.nom_commune || `Commune ${insee}`;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 p-6 font-sans">
+    <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Prix au m² à {cityName}
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
             Prix médian calculé à partir des transactions immobilières réelles (DVF), code INSEE {insee}.
           </p>
         </header>
@@ -68,42 +68,42 @@ export default async function PrixM2Page({ params }: Props) {
         <CityPageNav codeInsee={insee} current="prix-m2" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
-            <div className="flex items-center justify-center gap-2 text-slate-400 mb-2 text-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-2 text-slate-500 mb-2 text-sm">
               <TrendingUp className="w-4 h-4" />
               Appartement
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-slate-900">
               {data.prix_m2_appart_moyen ? `${Math.round(data.prix_m2_appart_moyen).toLocaleString()} €` : "N/D"}
-              <span className="text-sm text-slate-400 font-medium"> / m²</span>
+              <span className="text-sm text-slate-500 font-medium"> / m²</span>
             </div>
           </div>
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
-            <div className="flex items-center justify-center gap-2 text-slate-400 mb-2 text-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-2 text-slate-500 mb-2 text-sm">
               <TrendingUp className="w-4 h-4" />
               Maison
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-slate-900">
               {data.prix_m2_maison_moyen ? `${Math.round(data.prix_m2_maison_moyen).toLocaleString()} €` : "N/D"}
-              <span className="text-sm text-slate-400 font-medium"> / m²</span>
+              <span className="text-sm text-slate-500 font-medium"> / m²</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-b from-slate-800/80 to-slate-900 border border-purple-500/30 rounded-3xl p-6 text-center">
-          <p className="text-sm text-slate-400 mb-4">
+        <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
+          <p className="text-sm text-slate-500 mb-4">
             À ce prix, à partir de combien d&apos;années l&apos;achat devient-il plus rentable que la location à {cityName} ?
           </p>
           <Link
             href={`/acheter-ou-louer/${insee}`}
-            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl px-6 py-3 transition-colors"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full px-6 py-3 transition-all duration-150"
           >
             Lancer la simulation complète
             <ArrowRight size={16} />
           </Link>
         </div>
 
-        <p className="text-xs text-slate-600 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
           Prix médian calculé sur les transactions DVF (Demandes de Valeurs Foncières, DGFiP), à titre indicatif. Ne remplace pas une estimation par un professionnel.
         </p>
       </div>

@@ -42,10 +42,10 @@ export default async function LoyerMoyenPage({ params }: Props) {
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+      <main className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Ville Introuvable</h1>
-          <p className="text-slate-400">Nous n&apos;avons pas encore de données pour le code INSEE {insee}.</p>
+          <p className="text-slate-500">Nous n&apos;avons pas encore de données pour le code INSEE {insee}.</p>
         </div>
       </main>
     );
@@ -55,13 +55,13 @@ export default async function LoyerMoyenPage({ params }: Props) {
   const loyerAppart50m2 = data.loyer_m2_appart_moyen ? Math.round(data.loyer_m2_appart_moyen * 50) : null;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 p-6 font-sans">
+    <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
             Loyer moyen à {cityName}
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
             Indicateurs de loyers d&apos;annonce, code INSEE {insee}.
           </p>
         </header>
@@ -69,48 +69,48 @@ export default async function LoyerMoyenPage({ params }: Props) {
         <CityPageNav codeInsee={insee} current="loyer-moyen" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
-            <div className="flex items-center justify-center gap-2 text-slate-400 mb-2 text-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-2 text-slate-500 mb-2 text-sm">
               <KeyRound className="w-4 h-4" />
               Appartement
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-slate-900">
               {data.loyer_m2_appart_moyen ? `${data.loyer_m2_appart_moyen.toFixed(1)} €` : "N/D"}
-              <span className="text-sm text-slate-400 font-medium"> / m² / mois</span>
+              <span className="text-sm text-slate-500 font-medium"> / m² / mois</span>
             </div>
           </div>
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
-            <div className="flex items-center justify-center gap-2 text-slate-400 mb-2 text-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-2 text-slate-500 mb-2 text-sm">
               <KeyRound className="w-4 h-4" />
               Maison
             </div>
-            <div className="text-4xl font-extrabold text-white">
+            <div className="text-4xl font-extrabold text-slate-900">
               {data.loyer_m2_maison_moyen ? `${data.loyer_m2_maison_moyen.toFixed(1)} €` : "N/D"}
-              <span className="text-sm text-slate-400 font-medium"> / m² / mois</span>
+              <span className="text-sm text-slate-500 font-medium"> / m² / mois</span>
             </div>
           </div>
         </div>
 
         {loyerAppart50m2 && (
-          <p className="text-center text-slate-400 text-sm">
-            Soit environ <strong className="text-white">{loyerAppart50m2.toLocaleString()} € / mois</strong> pour un appartement de 50 m².
+          <p className="text-center text-slate-500 text-sm">
+            Soit environ <strong className="text-slate-900">{loyerAppart50m2.toLocaleString()} € / mois</strong> pour un appartement de 50 m².
           </p>
         )}
 
-        <div className="bg-gradient-to-b from-slate-800/80 to-slate-900 border border-purple-500/30 rounded-3xl p-6 text-center">
-          <p className="text-sm text-slate-400 mb-4">
+        <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 text-center shadow-sm">
+          <p className="text-sm text-slate-500 mb-4">
             À ce niveau de loyer, l&apos;achat est-il plus rentable à {cityName} ? Comparez sur 25 ans.
           </p>
           <Link
             href={`/acheter-ou-louer/${insee}`}
-            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-xl px-6 py-3 transition-colors"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full px-6 py-3 transition-all duration-150"
           >
             Lancer la simulation complète
             <ArrowRight size={16} />
           </Link>
         </div>
 
-        <p className="text-xs text-slate-600 text-center max-w-xl mx-auto">
+        <p className="text-xs text-slate-400 text-center max-w-xl mx-auto">
           Indicateur de loyer d&apos;annonce par commune (ANIL/Observatoires des loyers), à titre indicatif. Le loyer réel dépend de l&apos;état et de l&apos;emplacement précis du bien.
         </p>
       </div>
