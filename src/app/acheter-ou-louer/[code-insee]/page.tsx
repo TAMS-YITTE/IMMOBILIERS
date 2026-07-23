@@ -73,7 +73,8 @@ export default async function CitySimulatorPage({ params }: Props) {
       loyer_m2_appart: data.loyer_m2_appart_moyen || 0,
       loyer_m2_maison: data.loyer_m2_maison_moyen || 0,
       taxe_fonciere: data.taxe_fonciere_moyenne || 0,
-      ratio_dpe_fg: data.ratio_dpe_fg || 0
+      ratio_dpe_fg: data.ratio_dpe_fg || 0,
+      code_postal: data.codes_postaux && data.codes_postaux.length > 0 ? data.codes_postaux[0] : null
     }
   };
 

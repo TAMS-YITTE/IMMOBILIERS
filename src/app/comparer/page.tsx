@@ -6,12 +6,16 @@ export const revalidate = 3600;
 export default async function ComparerPage() {
   const { data: communes } = await supabase
     .from("communes_metrics")
-    .select("code_insee, nom_commune")
+    .select("code_insee, nom_commune, codes_postaux")
     .order("nom_commune", { ascending: true })
     .limit(1000);
 
   const initialCities = communes
-    ? communes.map((c) => ({ code: c.code_insee, nom: c.nom_commune || c.code_insee }))
+    ? communes.map((c) => ({
+        code: c.code_insee,
+        nom: c.nom_commune || c.code_insee,
+        codePostal: c.codes_postaux && c.codes_postaux.length > 0 ? c.codes_postaux[0] : null,
+      }))
     : [];
 
   return (

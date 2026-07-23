@@ -10,6 +10,7 @@ import { ArrowRight, CheckCircle2, AlertTriangle, Plus, Trash2, Scale } from 'lu
 interface CityOption {
   code: string;
   nom: string;
+  codePostal: string | null;
 }
 
 interface CommuneMetric {
@@ -20,6 +21,7 @@ interface CommuneMetric {
   loyer_m2_maison: number;
   taxe_fonciere: number;
   ratio_dpe_fg: number;
+  code_postal: string | null;
 }
 
 export default function ComparerClient({ initialCityOptions }: { initialCityOptions: CityOption[] }) {
@@ -55,6 +57,7 @@ export default function ComparerClient({ initialCityOptions }: { initialCityOpti
           loyer_m2_maison: r.loyer_m2_maison_moyen || 0,
           taxe_fonciere: r.taxe_fonciere_moyenne || 0,
           ratio_dpe_fg: r.ratio_dpe_fg || 0,
+          code_postal: r.codes_postaux && r.codes_postaux.length > 0 ? r.codes_postaux[0] : null,
         };
       });
 
@@ -175,7 +178,7 @@ export default function ComparerClient({ initialCityOptions }: { initialCityOpti
               .filter((c) => !selectedCodes.includes(c.code))
               .map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.nom} ({c.code})
+                  {c.codePostal ? `${c.codePostal} - ${c.nom}` : c.nom}
                 </option>
               ))}
           </select>
@@ -203,7 +206,7 @@ export default function ComparerClient({ initialCityOptions }: { initialCityOpti
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-bold text-white">{metrics.nom}</h3>
-                    <span className="text-xs text-slate-500 font-mono">Code INSEE: {c.code}</span>
+                    <span className="text-xs text-slate-500 font-mono">{metrics.code_postal || `Code INSEE: ${c.code}`}</span>
                   </div>
                   {selectedCodes.length > 1 && (
                     <button

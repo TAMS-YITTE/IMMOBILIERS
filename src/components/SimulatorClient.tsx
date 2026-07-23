@@ -15,6 +15,7 @@ interface CommuneMetric {
   loyer_m2_maison: number;
   taxe_fonciere: number;
   ratio_dpe_fg: number;
+  code_postal: string | null;
 }
 
 interface CommuneRow {
@@ -26,11 +27,13 @@ interface CommuneRow {
   loyer_m2_maison_moyen: number | null;
   taxe_fonciere_moyenne: number | null;
   ratio_dpe_fg: number | null;
+  codes_postaux: string[] | null;
 }
 
 interface CityIndexEntry {
   code_insee: string;
   nom: string;
+  code_postal: string | null;
 }
 
 interface SimulatorClientProps {
@@ -72,11 +75,13 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [leadSuccess, setLeadSuccess] = useState(false);
   const [leadConsent, setLeadConsent] = useState(false);
 
-  // Index leger pour la recherche (code + nom seulement, pas les 6 colonnes de mesures) :
+  // Index leger pour la recherche (code + nom + codes postaux, pas les 6 colonnes de mesures) :
   // telecharger les 32 800 lignes completes juste pour peupler une barre de recherche etait
   // inutilement lourd. Se charge en tache de fond, y compris sur les pages SSR par ville, sinon
   // la recherche ne peut jamais trouver une AUTRE ville que celle deja affichee (verifie en
   // direct : sur la page Paris, chercher "Lyon" ne renvoyait rien).
+  // Une entree par (commune, code postal) : les utilisateurs tapent naturellement leur code
+  // postal (77500), pas le code INSEE (77108) qui leur est invisible.
   useEffect(() => {
     async function fetchCityIndex() {
       try {
@@ -86,13 +91,16 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
         while (true) {
           const { data: page, error } = await supabase
             .from('communes_metrics')
-            .select('code_insee, nom_commune')
+            .select('code_insee, nom_commune, codes_postaux')
             .range(from, from + PAGE_SIZE - 1);
           if (error || !page || page.length === 0) break;
-          allRows.push(...page.map((r: { code_insee: string; nom_commune: string | null }) => ({
-            code_insee: r.code_insee,
-            nom: r.nom_commune || `Commune ${r.code_insee}`,
-          })));
+          for (const r of page as { code_insee: string; nom_commune: string | null; codes_postaux: string[] | null }[]) {
+            const nom = r.nom_commune || `Commune ${r.code_insee}`;
+            const postaux = r.codes_postaux && r.codes_postaux.length > 0 ? r.codes_postaux : [null];
+            for (const code_postal of postaux) {
+              allRows.push({ code_insee: r.code_insee, nom, code_postal });
+            }
+          }
           if (page.length < PAGE_SIZE) break;
           from += PAGE_SIZE;
         }
@@ -122,6 +130,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       loyer_m2_maison: row.loyer_m2_maison_moyen || 0,
       taxe_fonciere: row.taxe_fonciere_moyenne || 0,
       ratio_dpe_fg: row.ratio_dpe_fg || 0,
+      code_postal: row.codes_postaux && row.codes_postaux.length > 0 ? row.codes_postaux[0] : null,
     };
   }
 
@@ -152,7 +161,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const currentCity = communeMetrics[insee];
   const displayValue = searchQuery !== null 
     ? searchQuery 
-    : (currentCity ? `${currentCity.nom} (${insee})` : insee);
+    : (currentCity ? `${currentCity.nom} (${currentCity.code_postal || insee})` : insee);
 
   // Click outside to close dropdown and reset query back to current city display
   useEffect(() => {
@@ -173,7 +182,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
     const q = searchQuery.trim().toLowerCase();
     return cityIndex
-      .filter((c) => c.nom.toLowerCase().includes(q) || c.code_insee.includes(q))
+      .filter((c) =>
+        c.nom.toLowerCase().includes(q) ||
+        c.code_insee.includes(q) ||
+        (c.code_postal !== null && c.code_postal.includes(q))
+      )
       .slice(0, 30);
   }, [cityIndex, searchQuery]);
 
@@ -362,7 +375,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                         setSearchQuery(e.target.value);
                         setIsDropdownOpen(true);
                       }}
-                      placeholder="Rechercher une ville ou code INSEE..."
+                      placeholder="Rechercher une ville ou un code postal..."
                       className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-white placeholder-slate-500 pr-10"
                     />
                     {isDropdownOpen && displayValue ? (
@@ -388,7 +401,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                       {filteredCommunes.length > 0 ? (
                         filteredCommunes.map((c) => (
                           <button
-                            key={c.code_insee}
+                            key={`${c.code_insee}-${c.code_postal ?? 'none'}`}
                             type="button"
                             onClick={() => {
                               setInsee(c.code_insee);
@@ -400,7 +413,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                             }`}
                           >
                             <span>{c.nom}</span>
-                            <span className="text-xs text-slate-500 font-mono">{c.code_insee}</span>
+                            <span className="text-xs text-slate-500 font-mono">{c.code_postal || c.code_insee}</span>
                           </button>
                         ))
                       ) : (

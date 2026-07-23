@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useMemo } from "react";
 import { DEPARTEMENTS, departementFromCodeInsee } from "@/lib/departements";
 
-type Ville = { code_insee: string; nom_commune: string };
+type Ville = { code_insee: string; nom_commune: string; codes_postaux: string[] | null };
 
 export default function VillesClient({ initialVilles }: { initialVilles: Ville[] }) {
   const [query, setQuery] = useState("");
@@ -27,7 +27,11 @@ export default function VillesClient({ initialVilles }: { initialVilles: Ville[]
 
     if (query.trim()) {
       const q = query.toLowerCase();
-      result = result.filter((v) => v.nom_commune?.toLowerCase().includes(q) || v.code_insee?.includes(q));
+      result = result.filter((v) =>
+        v.nom_commune?.toLowerCase().includes(q) ||
+        v.code_insee?.includes(q) ||
+        v.codes_postaux?.some((cp) => cp.includes(q))
+      );
     }
 
     return result.slice(0, 100);
@@ -39,7 +43,7 @@ export default function VillesClient({ initialVilles }: { initialVilles: Ville[]
         <div className="relative flex-1 max-w-md">
           <input
             type="text"
-            placeholder="Rechercher une ville (ex: Paris, Lyon)..."
+            placeholder="Rechercher une ville ou un code postal..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-white/5 border border-white/20 text-white placeholder-slate-400 rounded-lg p-4 outline-none focus:border-purple-500 transition-colors"
@@ -78,7 +82,9 @@ export default function VillesClient({ initialVilles }: { initialVilles: Ville[]
             <h2 className="text-lg font-semibold text-slate-200 group-hover:text-purple-400 transition-colors">
               {ville.nom_commune}
             </h2>
-            <span className="text-xs text-slate-500">Code INSEE: {ville.code_insee}</span>
+            <span className="text-xs text-slate-500">
+              {ville.codes_postaux && ville.codes_postaux.length > 0 ? ville.codes_postaux[0] : `Code INSEE: ${ville.code_insee}`}
+            </span>
           </Link>
         ))}
       </div>

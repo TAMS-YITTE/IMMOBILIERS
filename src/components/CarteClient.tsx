@@ -12,6 +12,7 @@ interface CommuneData {
   loyer_m2_appart_moyen: number | null;
   taxe_fonciere_moyenne: number | null;
   ratio_dpe_fg: number | null;
+  codes_postaux: string[] | null;
 }
 
 const REF_SCENARIO = {
@@ -54,6 +55,8 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
 
       return {
         code: c.code_insee,
+        codePostal: c.codes_postaux && c.codes_postaux.length > 0 ? c.codes_postaux[0] : null,
+        codesPostaux: c.codes_postaux || [],
         nom: c.nom_commune || c.code_insee,
         prixM2,
         loyerM2,
@@ -68,7 +71,11 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
     if (!searchTerm.trim()) return processedCities.slice(0, 48);
     const q = searchTerm.toLowerCase();
     return processedCities
-      .filter((c) => c.nom.toLowerCase().includes(q) || c.code.includes(q))
+      .filter((c) =>
+        c.nom.toLowerCase().includes(q) ||
+        c.code.includes(q) ||
+        c.codesPostaux.some((cp) => cp.includes(q))
+      )
       .slice(0, 48);
   }, [processedCities, searchTerm]);
 
@@ -108,7 +115,7 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Rechercher une ville sur la carte..."
+          placeholder="Rechercher une ville ou un code postal..."
           className="w-full bg-slate-900 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-xl"
         />
       </div>
@@ -128,7 +135,7 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
                 </h3>
                 <MapPin size={16} className="text-slate-400 shrink-0" />
               </div>
-              <p className="text-xs text-slate-400 font-mono mb-4">INSEE: {c.code}</p>
+              <p className="text-xs text-slate-400 font-mono mb-4">{c.codePostal || `INSEE: ${c.code}`}</p>
             </div>
 
             <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">

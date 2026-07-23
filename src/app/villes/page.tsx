@@ -9,13 +9,13 @@ async function fetchAllVilles() {
   // il faut paginer pour récupérer la liste complète plutôt que les 1000 premières
   // (alphabétiquement), ce qui excluait silencieusement des villes comme Paris ou Lyon.
   const PAGE_SIZE = 1000;
-  const all: { code_insee: string; nom_commune: string }[] = [];
+  const all: { code_insee: string; nom_commune: string; codes_postaux: string[] | null }[] = [];
   let from = 0;
 
   while (true) {
     const { data, error } = await supabase
       .from("communes_metrics")
-      .select("code_insee, nom_commune")
+      .select("code_insee, nom_commune, codes_postaux")
       .order("nom_commune", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 

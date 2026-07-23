@@ -6,7 +6,7 @@ export const revalidate = 86400; // 24 hours ISR
 export default async function CartePage() {
   const { data: communes } = await supabase
     .from("communes_metrics")
-    .select("code_insee, nom_commune, prix_m2_appart_moyen, loyer_m2_appart_moyen, taxe_fonciere_moyenne, ratio_dpe_fg")
+    .select("code_insee, nom_commune, prix_m2_appart_moyen, loyer_m2_appart_moyen, taxe_fonciere_moyenne, ratio_dpe_fg, codes_postaux")
     .limit(1000);
 
   const initialMetrics = communes || [];
