@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useDeferredValue } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { Info, Loader2, MousePointerClick } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
@@ -57,10 +57,17 @@ function formatAnnees(valeur: number): string {
 
 export default function CarteClient({ initialCommunes }: { initialCommunes: CommuneData[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlBien = searchParams.get('bien');
+  const defaultBien = urlBien === 'maison' ? 'maison' : 'appartement';
+
   const [searchTerm, setSearchTerm] = useState('');
   const [zoom, setZoom] = useState(1);
   const [coordsData, setCoordsData] = useState<Record<string, [number, number]> | null>(null);
-  const [scenario, setScenario] = useState<ScenarioCarte>(SCENARIO_REFERENCE);
+  const [scenario, setScenario] = useState<ScenarioCarte>({
+    ...SCENARIO_REFERENCE,
+    typeBien: defaultBien
+  });
 
   // Un recalcul complet coûte ~30 ms sur les 10 038 communes : on le laisse
   // passer en priorité basse pour que les curseurs restent fluides.

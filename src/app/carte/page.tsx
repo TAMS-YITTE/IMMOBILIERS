@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import CarteClient from "@/components/CarteClient";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Acheter ou louer : la carte de France",
@@ -56,7 +57,9 @@ export default async function CartePage() {
         </p>
       </header>
 
-      <CarteClient initialCommunes={initialMetrics} />
+      <Suspense fallback={<div className="h-[600px] flex items-center justify-center text-slate-500">Chargement de la carte...</div>}>
+        <CarteClient initialCommunes={initialMetrics} />
+      </Suspense>
     </main>
   );
 }

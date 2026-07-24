@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { RotateCcw, SlidersHorizontal } from 'lucide-react';
+import Link from 'next/link';
 
 export interface ScenarioCarte {
   typeBien: 'appartement' | 'maison';
@@ -91,20 +92,24 @@ export default function CarteReglages({
       </div>
 
       <div className="flex bg-slate-100 p-1 rounded-lg w-fit">
-        <button
-          type="button"
+        <Link
+          href="?bien=appartement"
+          replace={true}
+          scroll={false}
           onClick={() => set({ typeBien: 'appartement' })}
           className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${scenario.typeBien === 'appartement' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           Appartement
-        </button>
-        <button
-          type="button"
+        </Link>
+        <Link
+          href="?bien=maison"
+          replace={true}
+          scroll={false}
           onClick={() => set({ typeBien: 'maison' })}
           className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${scenario.typeBien === 'maison' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           Maison
-        </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
