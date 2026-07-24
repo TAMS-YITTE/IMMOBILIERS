@@ -20,15 +20,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // fiabilite_score plafonne a 10 et ~4400 communes partagent ce max (dont toutes les
   // grandes villes). Un limit=1000 en piochait 1000 au hasard dans ce palier, excluant
-  // aleatoirement Lyon, Bordeaux, Nantes... Un limit=5000 couvre tout le palier fiab=10
-  // (25 000 URLs au total, sous le plafond de 50 000 URLs/sitemap de Google).
-  const { data: communes } = await supabase
-    .from('communes_metrics')
-    .select('code_insee')
-    .not('prix_m2_appart_moyen', 'is', null)
-    .order('fiabilite_score', { ascending: false })
-    .order('code_insee', { ascending: true })
-    .limit(5000);
+  // aleatoirement Lyon, Bordeaux, Nantes... On veut couvrir tout le palier (~5000 communes,
+  // 25 000 URLs, sous le plafond de 50 000 URLs/sitemap de Google).
+  //
+  // ATTENTION : PostgREST/Supabase plafonne CHAQUE reponse a 1000 lignes (db-max-rows),
+  // donc un simple .limit(5000) renvoie quand meme 1000 lignes. Il faut paginer par
+  // .range(), comme le fait deja carte/page.tsx.
+  const TARGET = 5000;
+  const PAGE_SIZE = 1000;
+  const communes: { code_insee: string }[] = [];
+  for (let from = 0; from < TARGET; from += PAGE_SIZE) {
+    const { data: page, error } = await supabase
+      .from('communes_metrics')
+      .select('code_insee')
+      .not('prix_m2_appart_moyen', 'is', null)
+      .order('fiabilite_score', { ascending: false })
+      .order('code_insee', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error || !page || page.length === 0) break;
+    communes.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
 
   const citySubRoutes = ['acheter-ou-louer', 'prix-m2', 'loyer-moyen', 'taxe-fonciere', 'renovation-energetique'];
   const dynamicCityRoutes: MetadataRoute.Sitemap = [];
