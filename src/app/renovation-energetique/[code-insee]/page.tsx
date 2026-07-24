@@ -31,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Passoires thermiques et rénovation énergétique à ${cityName}`,
     description: `Quelle part des logements est classée F ou G (passoire thermique) à ${cityName} (${insee}) ? Données DPE (ADEME) et impact sur votre budget travaux.`,
+    alternates: { canonical: `/renovation-energetique/${insee}` },
+    openGraph: {
+      title: `Passoires thermiques et rénovation énergétique à ${cityName}`,
+      description: `Quelle part des logements est classée F ou G (passoire thermique) à ${cityName} (${insee}) ? Données DPE (ADEME) et impact sur votre budget travaux.`,
+      url: `/renovation-energetique/${insee}`,
+    },
   };
 }
 
@@ -55,8 +61,20 @@ export default async function RenovationEnergetiquePage({ params }: Props) {
   const ratioFG = typeof data.ratio_dpe_fg === 'number' ? Math.round(data.ratio_dpe_fg * 100) : null;
   const provisionM2An = ratioFG !== null && data.ratio_dpe_fg > 0.3 ? 30 : 15;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `Rénovation énergétique à ${cityName}`,
+    "description": `Quelle part des logements est classée F ou G (passoire thermique) à ${cityName} (${insee}) ?`,
+    "url": `https://kalcul.app/renovation-energetique/${insee}`
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">

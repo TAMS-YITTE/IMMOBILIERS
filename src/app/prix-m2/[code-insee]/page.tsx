@@ -31,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Prix immobilier au m² à ${cityName} | Données réelles`,
     description: `Quel est le prix moyen au m² pour un appartement ou une maison à ${cityName} (${insee}) ? Données issues des transactions réelles (DVF).`,
+    alternates: { canonical: `/prix-m2/${insee}` },
+    openGraph: {
+      title: `Prix immobilier au m² à ${cityName} | Données réelles`,
+      description: `Quel est le prix moyen au m² pour un appartement ou une maison à ${cityName} (${insee}) ? Données issues des transactions réelles (DVF).`,
+      url: `/prix-m2/${insee}`,
+    },
   };
 }
 
@@ -53,8 +59,20 @@ export default async function PrixM2Page({ params }: Props) {
 
   const cityName = data.nom_commune || `Commune ${insee}`;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `Prix immobilier au m² à ${cityName}`,
+    "description": `Quel est le prix moyen au m² pour un appartement ou une maison à ${cityName} (${insee}) ?`,
+    "url": `https://kalcul.app/prix-m2/${insee}`
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">

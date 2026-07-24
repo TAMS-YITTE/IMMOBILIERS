@@ -31,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Taxe foncière à ${cityName} | Montant moyen`,
     description: `Quel est le montant moyen de la taxe foncière à ${cityName} (${insee}) ? Estimation basée sur les données DGFiP.`,
+    alternates: { canonical: `/taxe-fonciere/${insee}` },
+    openGraph: {
+      title: `Taxe foncière à ${cityName} | Montant moyen`,
+      description: `Quel est le montant moyen de la taxe foncière à ${cityName} (${insee}) ? Estimation basée sur les données DGFiP.`,
+      url: `/taxe-fonciere/${insee}`,
+    },
   };
 }
 
@@ -51,11 +57,22 @@ export default async function TaxeFoncierePage({ params }: Props) {
     );
   }
 
-  const cityName = data.nom_commune || `Commune ${insee}`;
   const fiabiliteFaible = typeof data.fiabilite_score === 'number' && data.fiabilite_score < 8;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `Taxe foncière à ${cityName}`,
+    "description": `Quel est le montant moyen de la taxe foncière à ${cityName} (${insee}) ?`,
+    "url": `https://kalcul.app/taxe-fonciere/${insee}`
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">

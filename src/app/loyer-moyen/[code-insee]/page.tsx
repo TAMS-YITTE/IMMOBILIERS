@@ -31,6 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Loyer moyen à ${cityName} | Indicateurs de loyers`,
     description: `Quel est le loyer moyen au m² à ${cityName} (${insee}) pour un appartement ou une maison ? Données issues des indicateurs de loyers ANIL.`,
+    alternates: { canonical: `/loyer-moyen/${insee}` },
+    openGraph: {
+      title: `Loyer moyen à ${cityName} | Indicateurs de loyers`,
+      description: `Quel est le loyer moyen au m² à ${cityName} (${insee}) pour un appartement ou une maison ? Données issues des indicateurs de loyers ANIL.`,
+      url: `/loyer-moyen/${insee}`,
+    },
   };
 }
 
@@ -54,8 +60,20 @@ export default async function LoyerMoyenPage({ params }: Props) {
   const cityName = data.nom_commune || `Commune ${insee}`;
   const loyerAppart50m2 = data.loyer_m2_appart_moyen ? Math.round(data.loyer_m2_appart_moyen * 50) : null;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `Loyer moyen à ${cityName}`,
+    "description": `Quel est le loyer moyen au m² à ${cityName} (${insee}) pour un appartement ou une maison ?`,
+    "url": `https://kalcul.app/loyer-moyen/${insee}`
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="max-w-4xl mx-auto space-y-8 py-12">
         <header className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">

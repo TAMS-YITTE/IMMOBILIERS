@@ -37,8 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cityName = data?.nom_commune || "cette ville";
 
   return {
-    title: `Faut-il acheter ou louer à ${cityName} en 2024 ? | Simulateur`,
+    title: `Faut-il acheter ou louer à ${cityName} ? | Simulateur`,
     description: `Découvrez si l'achat immobilier est plus rentable que la location à ${cityName} (${insee}). Calcul ultra-précis basé sur les vraies données du marché et impôts locaux.`,
+    alternates: { canonical: `/acheter-ou-louer/${insee}` },
+    openGraph: {
+      title: `Faut-il acheter ou louer à ${cityName} ? | Simulateur`,
+      description: `Découvrez si l'achat immobilier est plus rentable que la location à ${cityName} (${insee}). Calcul ultra-précis basé sur les vraies données du marché et impôts locaux.`,
+      url: `/acheter-ou-louer/${insee}`,
+    },
   };
 }
 
@@ -78,5 +84,21 @@ export default async function CitySimulatorPage({ params }: Props) {
     }
   };
 
-  return <SimulatorClient initialInsee={insee} initialCommuneMetrics={initialMetrics} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": `Faut-il acheter ou louer à ${data.nom_commune || "cette ville"} ?`,
+    "description": `Découvrez si l'achat immobilier est plus rentable que la location à ${data.nom_commune || "cette ville"} (${insee}).`,
+    "url": `https://kalcul.app/acheter-ou-louer/${insee}`
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <SimulatorClient initialInsee={insee} initialCommuneMetrics={initialMetrics} />
+    </>
+  );
 }
