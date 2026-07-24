@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useDeferredValue } from 'react';
 import { useRouter } from 'next/navigation';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { Info, Loader2, MousePointerClick } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from "react-simple-maps";
 import { Tooltip } from "react-tooltip";
+import CarteReglages, { SCENARIO_REFERENCE, type ScenarioCarte } from './CarteReglages';
 
 interface CommuneData {
   code_insee: string;
@@ -16,13 +17,6 @@ interface CommuneData {
   ratio_dpe_fg: number | null;
   codes_postaux: string[] | null;
 }
-
-const REF_SCENARIO = {
-  surface: 50,
-  apport: 25000,
-  tauxPret: 0.035,
-  dureePret: 25,
-};
 
 // Zoom à partir duquel les communes individuelles apparaissent en surcouche
 const ZOOM_COMMUNES = 3;
@@ -64,6 +58,12 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
   const [searchTerm, setSearchTerm] = useState('');
   const [zoom, setZoom] = useState(1);
   const [coordsData, setCoordsData] = useState<Record<string, [number, number]> | null>(null);
+  const [scenario, setScenario] = useState<ScenarioCarte>(SCENARIO_REFERENCE);
+
+  // Un recalcul complet coûte ~30 ms sur les 10 038 communes : on le laisse
+  // passer en priorité basse pour que les curseurs restent fluides.
+  const scenarioApplique = useDeferredValue(scenario);
+  const recalculEnCours = scenarioApplique !== scenario;
 
   useEffect(() => {
     // Dynamically import the coordinates json to avoid blocking the main bundle
@@ -84,10 +84,10 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
         loyer_m2: loyerM2,
         taxe_fonciere_annuelle: c.taxe_fonciere_moyenne || 0,
         ratio_dpe_fg: c.ratio_dpe_fg || 0,
-        surface: REF_SCENARIO.surface,
-        apport: REF_SCENARIO.apport,
-        taux_pret: REF_SCENARIO.tauxPret,
-        duree_pret_annees: REF_SCENARIO.dureePret,
+        surface: scenarioApplique.surface,
+        apport: scenarioApplique.apport,
+        taux_pret: scenarioApplique.tauxPret,
+        duree_pret_annees: scenarioApplique.dureePret,
       });
 
       const bascule = sim.bascule_annee !== null ? Number(sim.bascule_annee) : null;
@@ -104,7 +104,7 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
           : `la location reste gagnante sur 25 ans`,
       };
     });
-  }, [initialCommunes]);
+  }, [initialCommunes, scenarioApplique]);
 
   // Agrégation par département : bascule médiane des communes couvertes
   const deptStats = useMemo(() => {
@@ -161,9 +161,14 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
             le moment où le patrimoine net de l&apos;acheteur dépasse celui du locataire ayant placé son apport.
           </p>
           <p className="text-sm text-slate-600">
-            Calcul identique partout : <strong className="text-slate-900">appartement de 50 m²</strong>, <strong className="text-slate-900">25 000 € d&apos;apport</strong>, prêt sur <strong className="text-slate-900">25 ans</strong> à <strong className="text-slate-900">3,5 %</strong>.
-            Seules les données locales varient (prix au m², loyer, taxe foncière, passoires thermiques).
+            Le scénario ci-dessous s&apos;applique identiquement à toute la France : seules les données
+            locales varient (prix au m², loyer, taxe foncière, passoires thermiques).
           </p>
+        </div>
+
+        {/* Réglages du scénario */}
+        <div className="border-t border-slate-100 pt-6">
+          <CarteReglages scenario={scenario} onChange={setScenario} />
         </div>
 
         {/* Échelle de couleurs */}
@@ -217,7 +222,7 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
             rotate: [-3.0, -46.5, 0],
             scale: 2500
           }}
-          className="w-full h-full"
+          className={`w-full h-full transition-opacity duration-150 ${recalculEnCours ? 'opacity-60' : 'opacity-100'}`}
         >
           <ZoomableGroup
             center={mapCenter as [number, number]}
