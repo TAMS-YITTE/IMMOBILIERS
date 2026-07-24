@@ -83,7 +83,7 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   doc.setFontSize(12);
   doc.setTextColor(148, 163, 184); // Slate 400
   doc.setFont('helvetica', 'normal');
-  doc.text(`Marché de : ${communeName} (${codeInsee}) | Le ${new Date().toLocaleDateString('fr-FR')}`, 20, 42);
+  doc.text(`Marché de : ${communeName} | Le ${new Date().toLocaleDateString('fr-FR')}`, 20, 42);
 
   // Le "Money Shot" : Résumé du gain
   doc.setFillColor(243, 232, 255); // Purple 100
@@ -167,9 +167,9 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   drawParam('Montant total à financer :', formatEuro(montantEmprunte));
   drawParam(`Taux d'emprunt (sur ${userParams.dureePret} ans) :`, `${(userParams.tauxPret * 100).toFixed(2)} %`);
 
-  yP += 5;
+  yP += 6;
   doc.setFillColor(248, 250, 252);
-  doc.rect(20, yP - 5, 170, 48, 'F');
+  doc.rect(20, yP - 5, 170, 70, 'F');
   
   yP += 2;
   doc.setFont('helvetica', 'bold');
@@ -180,13 +180,32 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   drawParam(`Assurance emprunteur (${userParams.tauxAssurance}%) :`, `${formatEuro(assuranceMensuelle)} / mois`);
   drawParam('Charges de copropriété :', `${formatEuro(chargesCoproMensuelle)} / mois`);
   drawParam('Provision taxe foncière :', `${formatEuro(taxeFonciereMensuelle)} / mois`);
+  drawParam('Provision entretien / rénovation :', `${formatEuro(provisionMensuelle)} / mois`);
   
   yP += 2;
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(107, 33, 168);
-  doc.text('COÛT TOTAL MENSUEL :', 25, yP);
+  doc.text('COÛT TOTAL DE L\'ACHAT :', 25, yP);
   doc.text(`${formatEuro(mensualiteTotale)} / mois`, 120, yP);
-
+  
+  yP += 8;
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('Loyer équivalent estimé (avec charges) :', 25, yP);
+  doc.text(`${formatEuro(loyerM2 * surface * 1.10)} / mois`, 120, yP);
+  
+  yP += 8;
+  const diffMensuelle = mensualiteTotale - (loyerM2 * surface * 1.10);
+  doc.setFont('helvetica', 'bold');
+  if (diffMensuelle > 0) {
+    doc.setTextColor(220, 38, 38);
+    doc.text('EFFORT D\'ÉPARGNE SUPPLÉMENTAIRE :', 25, yP);
+    doc.text(`+ ${formatEuro(diffMensuelle)} / mois`, 120, yP);
+  } else {
+    doc.setTextColor(22, 163, 74);
+    doc.text('ÉCONOMIE MENSUELLE RÉALISÉE :', 25, yP);
+    doc.text(`${formatEuro(Math.abs(diffMensuelle))} / mois`, 120, yP);
+  }
 
   // --- PAGE 2 : GRAPHIQUE & SCÉNARIOS ---
   doc.addPage();
@@ -330,6 +349,22 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   drawScen(205, 'Revente à 10 ans', y10);
   drawScen(215, 'Revente à 20 ans', y20);
 
+  // Méthodologie
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text('La Méthodologie Kalcul', 20, 235);
+  doc.line(20, 238, 190, 238);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'italic');
+  doc.setTextColor(71, 85, 105);
+  const methodologyText = "Pour vous fournir une analyse d'une précision bancaire, notre moteur financier simule l'évolution de votre patrimoine mois par mois sur 25 ans.\n\n" +
+    "1. Le scénario d'Achat : L'algorithme intègre votre coût global (crédit, assurance, taxe foncière, charges et provisions pour l'entretien). Votre patrimoine net augmente mécaniquement via l'amortissement du crédit et la prise de valeur du bien (inflation immobilière en intérêts composés).\n\n" +
+    "2. Le scénario de Location : L'algorithme simule le paiement d'un loyer qui augmente chaque année. La force de notre modèle : la différence d'effort financier mensuel (l'économie réalisée en louant), ainsi que votre apport initial, sont virtuellement placés chaque mois sur un compte épargne générant des rendements.\n\n" +
+    "3. Le point de bascule : Le résultat affiché correspond à l'année exacte où la valeur nette de votre bien à la revente dépasse définitivement le capital épargné par le locataire.";
+  
+  doc.text(doc.splitTextToSize(methodologyText, 170), 20, 245);
 
   // --- PAGE 3 : CLIMAT & AMORTISSEMENT ---
   doc.addPage();
