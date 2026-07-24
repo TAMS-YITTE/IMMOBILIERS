@@ -66,7 +66,7 @@ export default async function RenovationEnergetiquePage({ params }: Props) {
     "@type": "WebPage",
     "name": `Rénovation énergétique à ${cityName}`,
     "description": `Quelle part des logements est classée F ou G (passoire thermique) à ${cityName} (${insee}) ?`,
-    "url": `https://kalcul.app/renovation-energetique/${insee}`
+    "url": `https://www.kalcul.app/renovation-energetique/${insee}`
   };
 
   return (

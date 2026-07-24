@@ -14,6 +14,10 @@ interface SavedSimulation {
   apport: number;
   taux_pret: number;
   duree_pret: number;
+  taux_assurance: number;
+  frais_agence: number;
+  charges_copro: number;
+  provision_reno: number;
   created_at: string;
 }
 
@@ -163,8 +167,8 @@ export default function Dashboard() {
                       <Calendar size={12} />
                       {new Date(sim.created_at).toLocaleDateString('fr-FR')}
                     </div>
-                    <a 
-                      href={`/acheter-ou-louer/${sim.code_insee}?surface=${sim.surface}&apport=${sim.apport}&taux=${sim.taux_pret}&duree=${sim.duree_pret}`}
+                    <a
+                      href={`/acheter-ou-louer/${sim.code_insee}?bien=${sim.type_bien}&surface=${sim.surface}&apport=${sim.apport}&taux=${sim.taux_pret}&duree=${sim.duree_pret}&assurance=${sim.taux_assurance}&fraisAgence=${sim.frais_agence}&charges=${sim.charges_copro}&reno=${sim.provision_reno}`}
                       className="text-sm font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1"
                     >
                       Reprendre <ArrowRight size={16} />

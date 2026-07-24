@@ -63,7 +63,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [chargesCopro, setChargesCopro] = useState(25); // €/m²/an
   const [customProvisionReno, setCustomProvisionReno] = useState<number | null>(null);
 
-  // Initialize from URL if resuming a saved simulation
+  // Initialize from URL if resuming a saved simulation.
+  // Le dashboard passe l'ensemble du scenario (type de bien + options avancees comprises)
+  // pour qu'une reprise restitue exactement la simulation sauvegardee, pas une version tronquee.
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -71,6 +73,17 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       if (params.has('apport')) setApport(Number(params.get('apport')));
       if (params.has('taux')) setTauxPret(Number(params.get('taux')));
       if (params.has('duree')) setDureePret(Number(params.get('duree')));
+      if (params.get('bien') === 'maison' || params.get('bien') === 'appart') {
+        setTypeBien(params.get('bien') as 'appart' | 'maison');
+      }
+
+      // Options avancees : si l'une est presente, on restaure les valeurs et on deplie le panneau
+      const hasAdvanced = ['assurance', 'fraisAgence', 'charges', 'reno'].some((k) => params.has(k));
+      if (params.has('assurance')) setTauxAssurance(Number(params.get('assurance')));
+      if (params.has('fraisAgence')) setFraisAgence(Number(params.get('fraisAgence')));
+      if (params.has('charges')) setChargesCopro(Number(params.get('charges')));
+      if (params.has('reno')) setCustomProvisionReno(Number(params.get('reno')));
+      if (hasAdvanced) setShowAdvanced(true);
     }
   }, []);
 

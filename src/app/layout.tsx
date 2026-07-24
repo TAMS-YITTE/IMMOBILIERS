@@ -20,7 +20,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://kalcul.app';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kalcul.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

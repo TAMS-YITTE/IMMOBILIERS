@@ -89,7 +89,7 @@ export default async function CitySimulatorPage({ params }: Props) {
     "@type": "WebPage",
     "name": `Faut-il acheter ou louer à ${data.nom_commune || "cette ville"} ?`,
     "description": `Découvrez si l'achat immobilier est plus rentable que la location à ${data.nom_commune || "cette ville"} (${insee}).`,
-    "url": `https://kalcul.app/acheter-ou-louer/${insee}`
+    "url": `https://www.kalcul.app/acheter-ou-louer/${insee}`
   };
 
   return (

@@ -65,7 +65,7 @@ export default async function LoyerMoyenPage({ params }: Props) {
     "@type": "WebPage",
     "name": `Loyer moyen à ${cityName}`,
     "description": `Quel est le loyer moyen au m² à ${cityName} (${insee}) pour un appartement ou une maison ?`,
-    "url": `https://kalcul.app/loyer-moyen/${insee}`
+    "url": `https://www.kalcul.app/loyer-moyen/${insee}`
   };
 
   return (

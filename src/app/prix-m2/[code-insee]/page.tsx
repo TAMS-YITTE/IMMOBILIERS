@@ -64,7 +64,7 @@ export default async function PrixM2Page({ params }: Props) {
     "@type": "WebPage",
     "name": `Prix immobilier au m² à ${cityName}`,
     "description": `Quel est le prix moyen au m² pour un appartement ou une maison à ${cityName} (${insee}) ?`,
-    "url": `https://kalcul.app/prix-m2/${insee}`
+    "url": `https://www.kalcul.app/prix-m2/${insee}`
   };
 
   return (

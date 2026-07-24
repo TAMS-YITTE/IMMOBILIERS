@@ -65,7 +65,7 @@ export default async function TaxeFoncierePage({ params }: Props) {
     "@type": "WebPage",
     "name": `Taxe foncière à ${cityName}`,
     "description": `Quel est le montant moyen de la taxe foncière à ${cityName} (${insee}) ?`,
-    "url": `https://kalcul.app/taxe-fonciere/${insee}`
+    "url": `https://www.kalcul.app/taxe-fonciere/${insee}`
   };
 
   return (
