@@ -372,19 +372,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       <div className="absolute top-0 right-0 w-full lg:w-1/2 h-[600px] bg-purple-300/25 blur-[120px] pointer-events-none" />
       <div className="absolute top-40 left-0 w-full lg:w-1/2 h-[500px] bg-blue-300/25 blur-[120px] pointer-events-none" />
 
-      {/* Top right auth navigation */}
-      <div className="absolute top-4 right-4 z-40 flex items-center gap-3">
-        {user ? (
-          <>
-            <a href="/dashboard" className="text-sm font-medium text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm hover:text-purple-600 transition-colors">Mon Compte</a>
-            <button onClick={() => supabase.auth.signOut()} className="bg-white border border-slate-200 p-2 rounded-full text-slate-500 hover:text-red-500 hover:bg-red-50 shadow-sm transition-colors" title="Se déconnecter">
-              <X size={16} />
-            </button>
-          </>
-        ) : (
-          <button onClick={() => setIsAuthModalOpen(true)} className="text-sm font-medium bg-white border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 shadow-sm transition-colors text-slate-700">Se connecter</button>
-        )}
-      </div>
+      {/* La connexion / le compte vivent desormais dans la navbar globale (voir Navbar.tsx),
+          plus besoin d'un bloc auth ici. Le bouton "Sauvegarder" ouvre toujours la modale
+          d'authentification via handleSaveSimulation si l'utilisateur n'est pas connecte. */}
 
       <div className="relative max-w-7xl mx-auto space-y-8">
 

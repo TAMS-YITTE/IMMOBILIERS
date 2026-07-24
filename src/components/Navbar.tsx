@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Map, Building2, Wrench, Briefcase, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Map, Building2, Wrench, Briefcase, Menu, X, ChevronDown, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
+import AuthModal from '@/components/AuthModal';
 
 const OUTILS = [
   { href: '/outils/mensualite', label: 'Calcul Mensualité' },
@@ -13,6 +16,20 @@ const OUTILS = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [outilsOpen, setOutilsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      // Une connexion réussie ferme automatiquement la modale
+      if (session?.user) setAuthOpen(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="sticky top-4 z-50 w-full px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
@@ -59,6 +76,30 @@ export default function Navbar() {
               <Briefcase className="w-4 h-4" />
               Espace Pro
             </Link>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                  <LayoutDashboard className="w-4 h-4 text-purple-600" />
+                  Mon espace
+                </Link>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  title="Se déconnecter"
+                  className="flex items-center justify-center w-9 h-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAuthOpen(true)}
+                className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                <LogIn className="w-4 h-4 text-purple-600" />
+                Se connecter
+              </button>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -125,9 +166,41 @@ export default function Navbar() {
               <Briefcase className="w-4 h-4" />
               Espace Pro
             </Link>
+
+            <div className="border-t border-slate-200 pt-2 mt-2">
+              {user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-purple-600" />
+                    Mon espace
+                  </Link>
+                  <button
+                    onClick={() => { supabase.auth.signOut(); setMobileOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Se déconnecter
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => { setAuthOpen(true); setMobileOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                >
+                  <LogIn className="w-4 h-4 text-purple-600" />
+                  Se connecter
+                </button>
+              )}
+            </div>
           </div>
         )}
       </nav>
+
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 }
