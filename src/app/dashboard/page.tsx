@@ -114,8 +114,8 @@ export default function Dashboard() {
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">Mon Espace Personnel</h1>
             <p className="text-slate-600 mt-2">Connecté en tant que <strong className="text-slate-800">{user.email}</strong></p>
           </div>
-          <button 
-            onClick={() => supabase.auth.signOut()} 
+          <button
+            onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }}
             className="text-sm font-medium bg-white border border-slate-200 px-5 py-2.5 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors shadow-sm"
           >
             Se déconnecter

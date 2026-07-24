@@ -84,7 +84,7 @@ export default function Navbar() {
                   Mon espace
                 </Link>
                 <button
-                  onClick={() => supabase.auth.signOut()}
+                  onClick={async () => { await supabase.auth.signOut(); window.location.href = '/'; }}
                   title="Se déconnecter"
                   className="flex items-center justify-center w-9 h-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 >
@@ -179,7 +179,7 @@ export default function Navbar() {
                     Mon espace
                   </Link>
                   <button
-                    onClick={() => { supabase.auth.signOut(); setMobileOpen(false); }}
+                    onClick={async () => { setMobileOpen(false); await supabase.auth.signOut(); window.location.href = '/'; }}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
