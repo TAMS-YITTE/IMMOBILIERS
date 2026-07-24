@@ -17,7 +17,9 @@ export default async function CartePage() {
     code_insee: string;
     nom_commune: string | null;
     prix_m2_appart_moyen: number | null;
+    prix_m2_maison_moyen: number | null;
     loyer_m2_appart_moyen: number | null;
+    loyer_m2_maison_moyen: number | null;
     taxe_fonciere_moyenne: number | null;
     ratio_dpe_fg: number | null;
     codes_postaux: string[] | null;
@@ -29,8 +31,8 @@ export default async function CartePage() {
   while (true) {
     const { data, error } = await supabase
       .from("communes_metrics")
-      .select("code_insee, nom_commune, prix_m2_appart_moyen, loyer_m2_appart_moyen, taxe_fonciere_moyenne, ratio_dpe_fg, codes_postaux")
-      .not("prix_m2_appart_moyen", "is", null)
+      .select("code_insee, nom_commune, prix_m2_appart_moyen, prix_m2_maison_moyen, loyer_m2_appart_moyen, loyer_m2_maison_moyen, taxe_fonciere_moyenne, ratio_dpe_fg, codes_postaux")
+      .or("prix_m2_appart_moyen.not.is.null,prix_m2_maison_moyen.not.is.null")
       .range(from, from + PAGE_SIZE - 1);
 
     if (error || !data || data.length === 0) break;

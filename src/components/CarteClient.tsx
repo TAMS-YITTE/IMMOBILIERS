@@ -12,7 +12,9 @@ interface CommuneData {
   code_insee: string;
   nom_commune: string | null;
   prix_m2_appart_moyen: number | null;
+  prix_m2_maison_moyen: number | null;
   loyer_m2_appart_moyen: number | null;
+  loyer_m2_maison_moyen: number | null;
   taxe_fonciere_moyenne: number | null;
   ratio_dpe_fg: number | null;
   codes_postaux: string[] | null;
@@ -75,9 +77,22 @@ export default function CarteClient({ initialCommunes }: { initialCommunes: Comm
   }, []);
 
   const processedCities = useMemo(() => {
-    return initialCommunes.map((c) => {
-      const prixM2 = c.prix_m2_appart_moyen || 0;
-      const loyerM2 = c.loyer_m2_appart_moyen || 0;
+    return initialCommunes
+      .filter((c) => {
+        if (scenarioApplique.typeBien === 'appartement') {
+          return c.prix_m2_appart_moyen != null && c.loyer_m2_appart_moyen != null;
+        } else {
+          return c.prix_m2_maison_moyen != null && c.loyer_m2_maison_moyen != null;
+        }
+      })
+      .map((c) => {
+        const prixM2 = scenarioApplique.typeBien === 'appartement'
+          ? (c.prix_m2_appart_moyen || 0)
+          : (c.prix_m2_maison_moyen || 0);
+          
+        const loyerM2 = scenarioApplique.typeBien === 'appartement'
+          ? (c.loyer_m2_appart_moyen || 0)
+          : (c.loyer_m2_maison_moyen || 0);
 
       const sim = simulateBuyVsRent({
         prix_m2: prixM2,

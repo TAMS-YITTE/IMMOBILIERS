@@ -4,6 +4,7 @@ import React from 'react';
 import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 
 export interface ScenarioCarte {
+  typeBien: 'appartement' | 'maison';
   surface: number;
   apport: number;
   tauxPret: number;      // décimal (0.035 = 3,5 %)
@@ -11,6 +12,7 @@ export interface ScenarioCarte {
 }
 
 export const SCENARIO_REFERENCE: ScenarioCarte = {
+  typeBien: 'appartement',
   surface: 50,
   apport: 25000,
   tauxPret: 0.035,
@@ -56,6 +58,7 @@ export default function CarteReglages({
   onChange: (s: ScenarioCarte) => void;
 }) {
   const estPersonnalise =
+    scenario.typeBien !== SCENARIO_REFERENCE.typeBien ||
     scenario.surface !== SCENARIO_REFERENCE.surface ||
     scenario.apport !== SCENARIO_REFERENCE.apport ||
     scenario.tauxPret !== SCENARIO_REFERENCE.tauxPret ||
@@ -85,6 +88,23 @@ export default function CarteReglages({
             Revenir au scénario de référence
           </button>
         )}
+      </div>
+
+      <div className="flex bg-slate-100 p-1 rounded-lg w-fit">
+        <button
+          type="button"
+          onClick={() => set({ typeBien: 'appartement' })}
+          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${scenario.typeBien === 'appartement' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Appartement
+        </button>
+        <button
+          type="button"
+          onClick={() => set({ typeBien: 'maison' })}
+          className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${scenario.typeBien === 'maison' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Maison
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
