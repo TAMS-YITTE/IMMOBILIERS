@@ -3,6 +3,7 @@
 import React from 'react';
 import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 
 export interface ScenarioCarte {
   typeBien: 'appartement' | 'maison';
@@ -65,7 +66,17 @@ export default function CarteReglages({
     scenario.tauxPret !== SCENARIO_REFERENCE.tauxPret ||
     scenario.dureePret !== SCENARIO_REFERENCE.dureePret;
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   const set = (patch: Partial<ScenarioCarte>) => onChange({ ...scenario, ...patch });
+
+  // Le reset remet aussi l'URL sur le type par défaut (appartement), sinon
+  // ?bien=maison persiste et la vue redevient maison au partage/rechargement.
+  const reinitialiser = () => {
+    onChange(SCENARIO_REFERENCE);
+    router.replace(pathname, { scroll: false });
+  };
 
   return (
     <div className="space-y-4">
@@ -82,7 +93,7 @@ export default function CarteReglages({
         {estPersonnalise && (
           <button
             type="button"
-            onClick={() => onChange(SCENARIO_REFERENCE)}
+            onClick={reinitialiser}
             className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-purple-600 transition-colors"
           >
             <RotateCcw size={13} />
