@@ -38,6 +38,7 @@ export async function POST(request: Request) {
         },
       ],
       mode: 'payment',
+      allow_promotion_codes: true,
       success_url: `${baseUrl}/paiement-reussi?session_id={CHECKOUT_SESSION_ID}&code=${codeInsee}`,
       cancel_url: `${baseUrl}/acheter-ou-louer/${codeInsee}`,
       metadata: {
