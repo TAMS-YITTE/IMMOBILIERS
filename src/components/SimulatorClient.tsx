@@ -6,6 +6,7 @@ import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldChe
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 import CityPageNav from '@/components/CityPageNav';
+import SocialShareWidget from '@/components/SocialShareWidget';
 
 interface CommuneMetric {
   nom: string;
@@ -614,6 +615,25 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               </div>
 
             </div>
+
+            <div className="bg-gradient-to-r from-purple-100 to-fuchsia-100 border border-purple-200 rounded-3xl p-6 relative shadow-sm mt-6 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h4 className="text-lg font-bold text-slate-900 mb-1">Partagez cette analyse 🚀</h4>
+                <p className="text-sm text-slate-600">
+                  Générez une infographie avec les vrais chiffres de {currentCityName} à partager sur LinkedIn, Instagram ou avec vos proches.
+                </p>
+              </div>
+              <div className="w-full md:w-1/3 shrink-0">
+                <SocialShareWidget 
+                  cityName={currentCityName}
+                  prixM2={typeBien === 'appart' ? communeMetrics[insee]?.prix_m2_appart : communeMetrics[insee]?.prix_m2_maison}
+                  loyerM2={typeBien === 'appart' ? communeMetrics[insee]?.loyer_m2_appart : communeMetrics[insee]?.loyer_m2_maison}
+                  taxeFonciere={communeMetrics[insee]?.taxe_fonciere}
+                  basculeAnnee={simulationResult?.bascule_annee || null}
+                />
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
