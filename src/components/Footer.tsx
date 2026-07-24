@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, Map, Wrench } from 'lucide-react';
+import { Home, Map, Building2, Wrench } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -28,12 +28,12 @@ export default function Footer() {
           <ul className="space-y-2 text-sm text-slate-500">
             <li>
               <Link href="/villes" className="hover:text-purple-600 transition-colors flex items-center gap-2">
-                <Map className="w-4 h-4" /> Annuaire des Villes
+                <Building2 className="w-4 h-4" /> Annuaire des Villes
               </Link>
             </li>
             <li>
               <Link href="/carte" className="hover:text-purple-600 transition-colors flex items-center gap-2">
-                <Map className="w-4 h-4" /> Carte Thermique
+                <Map className="w-4 h-4" /> Carte de France
               </Link>
             </li>
             <li>

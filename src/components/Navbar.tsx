@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Home, Map, Wrench, Briefcase, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Map, Building2, Wrench, Briefcase, Menu, X, ChevronDown } from 'lucide-react';
 
 const OUTILS = [
   { href: '/outils/mensualite', label: 'Calcul Mensualité' },
@@ -31,8 +31,13 @@ export default function Navbar() {
 
           {/* Desktop Links */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/villes" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+            <Link href="/carte" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               <Map className="w-4 h-4 text-purple-600" />
+              Carte
+            </Link>
+
+            <Link href="/villes" className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+              <Building2 className="w-4 h-4 text-purple-600" />
               Villes
             </Link>
 
@@ -70,11 +75,20 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden border-t border-slate-200 bg-white/95 px-4 py-4 space-y-2 rounded-b-3xl">
             <Link
-              href="/villes"
+              href="/carte"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
             >
               <Map className="w-4 h-4 text-purple-600" />
+              Carte
+            </Link>
+
+            <Link
+              href="/villes"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <Building2 className="w-4 h-4 text-purple-600" />
               Villes
             </Link>
 

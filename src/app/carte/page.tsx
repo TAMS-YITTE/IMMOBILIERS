@@ -3,8 +3,9 @@ import { supabase } from "@/lib/supabaseClient";
 import CarteClient from "@/components/CarteClient";
 
 export const metadata: Metadata = {
-  title: "Carte Thermique",
-  description: "Visualisez les zones où l'achat immobilier devient rentable le plus rapidement en France sur notre carte interactive.",
+  title: "Acheter ou louer : la carte de France",
+  description: "Découvrez département par département où l'achat immobilier devient plus rentable que la location, et en combien d'années. Carte interactive fondée sur les prix de vente et les loyers réels.",
+  alternates: { canonical: "/carte" },
 };
 
 export const revalidate = 86400; // 24 hours ISR
@@ -44,11 +45,12 @@ export default async function CartePage() {
   return (
     <main className="max-w-7xl mx-auto p-6 py-12">
       <header className="text-center space-y-4 mb-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-          Carte Thermique Immobilier : Acheter vs Louer
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+          Où l&apos;achat devient-il plus rentable que la location&nbsp;?
         </h1>
         <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-          Visualisez les zones où l&apos;achat devient rentable le plus rapidement en France.
+          La réponse département par département, à partir des prix de vente et des loyers réels.
+          Ajustez le scénario pour qu&apos;il corresponde à votre projet.
         </p>
       </header>
 
