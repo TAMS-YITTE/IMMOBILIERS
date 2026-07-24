@@ -57,6 +57,7 @@ export default async function TaxeFoncierePage({ params }: Props) {
     );
   }
 
+  const cityName = data.nom_commune || `Commune ${insee}`;
   const fiabiliteFaible = typeof data.fiabilite_score === 'number' && data.fiabilite_score < 8;
 
   const jsonLd = {
