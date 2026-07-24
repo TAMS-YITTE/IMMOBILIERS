@@ -3,7 +3,7 @@
 import React from 'react';
 import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export interface ScenarioCarte {
   typeBien: 'appartement' | 'maison';
@@ -66,16 +66,19 @@ export default function CarteReglages({
     scenario.tauxPret !== SCENARIO_REFERENCE.tauxPret ||
     scenario.dureePret !== SCENARIO_REFERENCE.dureePret;
 
-  const router = useRouter();
   const pathname = usePathname();
 
   const set = (patch: Partial<ScenarioCarte>) => onChange({ ...scenario, ...patch });
 
   // Le reset remet aussi l'URL sur le type par défaut (appartement), sinon
   // ?bien=maison persiste et la vue redevient maison au partage/rechargement.
+  // On nettoie l'URL via l'API History native : router.replace(pathname) est
+  // un no-op quand la page a été chargée en dur avec le paramètre (l'App Router
+  // considère le pathname déjà courant). Ici c'est purement cosmétique — l'état
+  // est déjà la source de vérité — donc replaceState suffit et est fiable.
   const reinitialiser = () => {
     onChange(SCENARIO_REFERENCE);
-    router.replace(pathname, { scroll: false });
+    window.history.replaceState(null, '', pathname);
   };
 
   return (
