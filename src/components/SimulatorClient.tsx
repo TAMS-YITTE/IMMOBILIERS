@@ -630,6 +630,10 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                   loyerM2={typeBien === 'appart' ? communeMetrics[insee]?.loyer_m2_appart : communeMetrics[insee]?.loyer_m2_maison}
                   taxeFonciere={communeMetrics[insee]?.taxe_fonciere}
                   basculeAnnee={simulationResult?.bascule_annee || null}
+                  surface={surface}
+                  apport={apport}
+                  dureePret={dureePret}
+                  typeBien={typeBien}
                 />
               </div>
             </div>

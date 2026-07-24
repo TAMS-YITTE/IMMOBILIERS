@@ -10,6 +10,10 @@ interface SocialShareWidgetProps {
   loyerM2: number;
   taxeFonciere: number;
   basculeAnnee: number | string | null;
+  surface: number;
+  apport: number;
+  dureePret: number;
+  typeBien: 'appart' | 'maison';
 }
 
 export default function SocialShareWidget({
@@ -18,6 +22,10 @@ export default function SocialShareWidget({
   loyerM2,
   taxeFonciere,
   basculeAnnee,
+  surface,
+  apport,
+  dureePret,
+  typeBien,
 }: SocialShareWidgetProps) {
   const widgetRef = useRef<HTMLDivElement>(null);
   const [generating, setGenerating] = useState(false);
@@ -84,13 +92,27 @@ export default function SocialShareWidget({
                   {cityName} ?
                 </span>
               </h1>
+              
+              <div className="mt-8 flex gap-4 text-purple-200 text-2xl font-medium">
+                <div className="bg-white/10 px-5 py-2 rounded-xl border border-white/10 flex items-center gap-2 shadow-lg">
+                  🏠 {typeBien === 'appart' ? 'Appartement' : 'Maison'} {surface} m²
+                </div>
+                <div className="bg-white/10 px-5 py-2 rounded-xl border border-white/10 flex items-center gap-2 shadow-lg">
+                  💰 Apport : {apport.toLocaleString()} €
+                </div>
+                <div className="bg-white/10 px-5 py-2 rounded-xl border border-white/10 flex items-center gap-2 shadow-lg">
+                  ⏱️ {dureePret} ans
+                </div>
+              </div>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/10 text-center min-w-[250px]">
-               <div className="text-purple-300 text-xl font-medium mb-2">Taxe Foncière</div>
-               <div className="text-white text-4xl font-bold">{taxeFonciere ? `${Math.round(taxeFonciere)} €` : "N/D"}</div>
-               <div className="text-purple-200 text-lg">/ an</div>
-            </div>
+            {taxeFonciere > 0 && (
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/10 text-center min-w-[250px] shadow-lg">
+                 <div className="text-purple-300 text-xl font-medium mb-2">Taxe Foncière</div>
+                 <div className="text-white text-4xl font-bold">{Math.round(taxeFonciere)} €</div>
+                 <div className="text-purple-200 text-lg">/ an</div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-6 mt-12">
