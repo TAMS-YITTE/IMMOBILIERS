@@ -5,8 +5,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound, ChevronDown, Sliders } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
 import CityPageNav from '@/components/CityPageNav';
 import SocialShareWidget from '@/components/SocialShareWidget';
+import AuthModal from '@/components/AuthModal';
 
 interface CommuneMetric {
   nom: string;
@@ -61,6 +63,17 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [chargesCopro, setChargesCopro] = useState(25); // €/m²/an
   const [customProvisionReno, setCustomProvisionReno] = useState<number | null>(null);
 
+  // Initialize from URL if resuming a saved simulation
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('surface')) setSurface(Number(params.get('surface')));
+      if (params.has('apport')) setApport(Number(params.get('apport')));
+      if (params.has('taux')) setTauxPret(Number(params.get('taux')));
+      if (params.has('duree')) setDureePret(Number(params.get('duree')));
+    }
+  }, []);
+
   // City Search State (index leger : code + nom uniquement, pas toutes les colonnes)
   const [cityIndex, setCityIndex] = useState<CityIndexEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState<string | null>(null);
@@ -75,6 +88,23 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState(false);
   const [leadConsent, setLeadConsent] = useState(false);
+
+  // Auth & Save State
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Index leger pour la recherche (code + nom + codes postaux, pas les 6 colonnes de mesures) :
   // telecharger les 32 800 lignes completes juste pour peupler une barre de recherche etait
@@ -250,6 +280,39 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
     }
   };
 
+  const handleSaveSimulation = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const metrics = communeMetrics[insee];
+      const { error } = await supabase.from('saved_simulations').insert({
+        user_id: user.id,
+        code_insee: insee,
+        commune_name: metrics?.nom || 'Inconnu',
+        type_bien: typeBien,
+        surface,
+        apport,
+        taux_pret: tauxPret,
+        duree_pret: dureePret,
+        taux_assurance: tauxAssurance,
+        frais_agence: fraisAgence,
+        charges_copro: chargesCopro,
+        provision_reno: customProvisionReno !== null ? customProvisionReno : (metrics?.ratio_dpe_fg > 0.3 ? 30 : 15)
+      });
+      if (error) throw error;
+      alert("Simulation sauvegardée avec succès ! Retrouvez-la dans votre espace personnel.");
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la sauvegarde.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -308,6 +371,20 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
       {/* Halos ambiants : profondeur en fond, purement decoratif (pilote de refonte visuelle) */}
       <div className="absolute top-0 right-0 w-full lg:w-1/2 h-[600px] bg-purple-300/25 blur-[120px] pointer-events-none" />
       <div className="absolute top-40 left-0 w-full lg:w-1/2 h-[500px] bg-blue-300/25 blur-[120px] pointer-events-none" />
+
+      {/* Top right auth navigation */}
+      <div className="absolute top-4 right-4 z-40 flex items-center gap-3">
+        {user ? (
+          <>
+            <a href="/dashboard" className="text-sm font-medium text-slate-700 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm hover:text-purple-600 transition-colors">Mon Compte</a>
+            <button onClick={() => supabase.auth.signOut()} className="bg-white border border-slate-200 p-2 rounded-full text-slate-500 hover:text-red-500 hover:bg-red-50 shadow-sm transition-colors" title="Se déconnecter">
+              <X size={16} />
+            </button>
+          </>
+        ) : (
+          <button onClick={() => setIsAuthModalOpen(true)} className="text-sm font-medium bg-white border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 shadow-sm transition-colors text-slate-700">Se connecter</button>
+        )}
+      </div>
 
       <div className="relative max-w-7xl mx-auto space-y-8">
 
@@ -527,19 +604,29 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
             <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-50 to-blue-50 pointer-events-none" />
 
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10 gap-4">
                 <div>
                   <h3 className="text-xl font-medium text-slate-700">Évolution du Patrimoine Net</h3>
                   <p className="text-sm text-slate-500 mt-1">Comparaison sur 25 ans (avec inflation)</p>
                 </div>
-                {simulationResult && (
-                  <div className={`mt-4 md:mt-0 border px-4 py-2 rounded-full font-medium flex items-center gap-2 ${simulationResult.bascule_annee ? 'bg-green-100 border-green-300 text-green-700' : 'bg-red-100 border-red-300 text-red-700'}`}>
-                    <TrendingUp size={18} />
-                    {simulationResult.bascule_annee
-                      ? `Achat rentable après ${simulationResult.bascule_annee} ans`
-                      : `La location reste plus rentable`}
-                  </div>
-                )}
+                <div className="flex flex-col md:items-end gap-2 w-full md:w-auto">
+                  <button
+                    onClick={handleSaveSimulation}
+                    disabled={isSaving}
+                    className="flex items-center justify-center gap-2 bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 px-4 py-2 rounded-full font-medium transition-colors text-sm shadow-sm w-full md:w-auto"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    {user ? "Sauvegarder la simulation" : "Sauvegarder (Gratuit)"}
+                  </button>
+                  {simulationResult && (
+                    <div className={`border px-4 py-2 rounded-full font-medium flex items-center justify-center gap-2 text-sm w-full md:w-auto ${simulationResult.bascule_annee ? 'bg-green-100 border-green-300 text-green-700' : 'bg-red-100 border-red-300 text-red-700'}`}>
+                      <TrendingUp size={16} />
+                      {simulationResult.bascule_annee
+                        ? `Achat rentable après ${simulationResult.bascule_annee} ans`
+                        : `La location reste plus rentable`}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="h-[400px] w-full relative z-10">
@@ -741,6 +828,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           </div>
         </div>
       )}
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </main>
   );
 }
