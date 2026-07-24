@@ -47,7 +47,7 @@ export default async function CartePage() {
         <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           Carte Thermique Immobilier : Acheter vs Louer
         </h1>
-        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+        <p className="text-slate-600 text-lg max-w-2xl mx-auto">
           Visualisez les zones où l&apos;achat devient rentable le plus rapidement en France.
         </p>
       </header>
