@@ -37,7 +37,7 @@ function formatEuro(amount: any) {
 function generatePDFBuffer(communeName: string, codeInsee: string, data: any, simResult: any, userParams: any): ArrayBuffer {
   const doc = new jsPDF();
   
-  // Variables de simulation (respecte le type de bien choisi : appartement ou maison)
+  // Variables de simulation
   const surface = Number(userParams.surface);
   const prixM2 = Number(userParams.typeBien === 'appart' ? data.prix_m2_appart_moyen : data.prix_m2_maison_moyen) || 0;
   const loyerM2 = Number(userParams.typeBien === 'appart' ? data.loyer_m2_appart_moyen : data.loyer_m2_maison_moyen) || 0;
@@ -52,9 +52,6 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   const renoCostPerM2 = ratioPassoires > 0.35 ? 1200 : (ratioPassoires > 0.15 ? 750 : 400);
   const budgetRenoEstime = surface * renoCostPerM2;
 
-  // Detail de la mensualite (le moteur ne renvoie que le total credit+assurance ; on
-  // recalcule les autres postes ici avec les memes formules que calculator.ts pour les
-  // afficher separement et justifier le chiffre au lieu d'une seule ligne opaque).
   const montantEmprunte = Number(simResult.montant_emprunte) || 0;
   const mensualiteCredit = calculateMonthlyMortgage(montantEmprunte, Number(userParams.tauxPret), Number(userParams.dureePret));
   const assuranceMensuelle = (montantEmprunte * (Number(userParams.tauxAssurance) / 100)) / 12;
@@ -63,153 +60,159 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
   const taxeFonciereMensuelle = (Number(data.taxe_fonciere_moyenne) || 0) / 12;
   const mensualiteTotale = mensualiteCredit + assuranceMensuelle + chargesCoproMensuelle + provisionMensuelle + taxeFonciereMensuelle;
 
-  // PAGE 1: Synthèse & Données de base
-  doc.setFillColor(15, 23, 42); 
-  doc.rect(0, 0, 210, 40, 'F');
+  // Calcul du gain net (Année 25)
+  const hist = simResult.history;
+  const finalYear = hist[hist.length - 1];
+  const gainNet = (finalYear?.achat || 0) - (finalYear?.location || 0);
+
+  // --- PAGE 1 : COUVERTURE & RÉSUMÉ ---
   
+  // Header sombre premium
+  doc.setFillColor(15, 23, 42); 
+  doc.rect(0, 0, 210, 50, 'F');
+  
+  doc.setFontSize(14);
+  doc.setTextColor(167, 139, 250); // Violet clair
+  doc.setFont('helvetica', 'bold');
+  doc.text('Kalcul.app', 20, 20);
+
   doc.setFontSize(24);
   doc.setTextColor(255, 255, 255); 
-  doc.text('Rapport Financier Premium', 105, 25, { align: 'center' });
-  
-  doc.setFontSize(18);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Marché de : ${communeName}`, 20, 60);
-  
-  doc.setFontSize(11);
-  doc.setTextColor(100, 116, 139);
-  doc.text(`Analyse experte générée le ${new Date().toLocaleDateString('fr-FR')}`, 20, 70);
-  
-  // Section: Les Chiffres Locaux
-  doc.setDrawColor(226, 232, 240);
-  doc.line(20, 80, 190, 80);
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246); 
-  doc.text('1. Les Vrais Prix du Marché (DVF)', 20, 95);
+  doc.text('Bilan Financier Immobilier', 20, 32);
   
   doc.setFontSize(12);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Prix Appartement : ${formatPrice(data.prix_m2_appart_moyen)}`, 20, 105);
-  doc.text(`Prix Maison : ${formatPrice(data.prix_m2_maison_moyen)}`, 20, 115);
-  doc.text(`Loyer marché : ${formatPrice(data.loyer_m2_appart_moyen)}`, 110, 105);
-  doc.text(`Taxe Foncière : ${formatEuro(data.taxe_fonciere_moyenne)}`, 110, 115);
-
-  // Section: Simulation Concrète
-  doc.line(20, 130, 190, 130);
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text(`2. Votre Scénario : Achat de ${surface} m²`, 20, 145);
-
-  doc.setFontSize(11);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Budget d'environ ${formatEuro(prixTotal)} (hors frais annexes) | Apport: ${formatEuro(apport)}`, 20, 155);
-
-  doc.setFontSize(12);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`• Taux du prêt : ${(Number(userParams.tauxPret) * 100).toFixed(2)} % sur ${userParams.dureePret} ans`, 25, 165);
-  doc.text(`• Frais de notaire estimés (8%) : ${formatEuro(fraisNotaire)}`, 25, 173);
-  doc.text(`• Frais d'agence (${Number(userParams.fraisAgence).toFixed(1)} %) : ${formatEuro(fraisAgenceEuro)}`, 25, 181);
-  doc.text(`• Assurance emprunteur (${Number(userParams.tauxAssurance).toFixed(2)} %) : ${formatEuro(assuranceMensuelle)} / mois`, 25, 189);
-  doc.text(`• Charges de copropriété : ${formatEuro(chargesCoproMensuelle)} / mois`, 25, 197);
-  doc.text(`• Provision travaux / rénovation : ${formatEuro(provisionMensuelle)} / mois`, 25, 205);
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`• Mensualité totale estimée (crédit + assurance + charges + taxe) : ${formatEuro(mensualiteTotale)} / mois`, 25, 215);
+  doc.setTextColor(148, 163, 184); // Slate 400
   doc.setFont('helvetica', 'normal');
+  doc.text(`Marché de : ${communeName} (${codeInsee}) | Le ${new Date().toLocaleDateString('fr-FR')}`, 20, 42);
 
-  // Conclusion Page 1
-  doc.setFillColor(248, 250, 252);
-  doc.rect(20, 224, 170, 45, 'F');
-  doc.setFontSize(13);
-  doc.setTextColor(15, 23, 42);
-  doc.text('Verdict : Acheter ou Louer ?', 25, 236);
-
-  doc.setFontSize(11);
-  doc.setTextColor(71, 85, 105);
-  const textConclusion = simResult.bascule_annee
-    ? `Selon votre profil, l'investissement immobilier sur cet appartement devient mathématiquement plus rentable que la location après une détention de ${simResult.bascule_annee} ans.`
-    : `Attention, selon vos critères, la location reste mathématiquement plus avantageuse que l'achat sur l'ensemble de la période simulée (25 ans).`;
-  doc.text(doc.splitTextToSize(textConclusion, 160), 25, 246);
-
-  // PAGE 2: Scénarios & Risques
-  doc.addPage();
-  doc.setFillColor(15, 23, 42); 
-  doc.rect(0, 0, 210, 25, 'F');
-  doc.setFontSize(14);
-  doc.setTextColor(255, 255, 255); 
-  doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
-
-  // Section: Comparaison selon la durée
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text('3. Comparaison selon la durée de détention', 20, 45);
-
-  const hist = simResult.history;
-  const getSimLine = (yearIndex: number) => {
-    if (!hist[yearIndex]) return { achat: 0, location: 0 };
-    return hist[yearIndex];
-  };
-
-  const y5 = getSimLine(4);
-  const y10 = getSimLine(9);
-  const y20 = getSimLine(19);
-
-  // Tracer un mini tableau
-  doc.setFontSize(11);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(139, 92, 246);
-  doc.rect(20, 55, 170, 8, 'F');
-  doc.text('Scénario', 25, 60);
-  doc.text('Patrimoine Acheteur', 70, 60);
-  doc.text('Patrimoine Locataire', 120, 60);
-  doc.text('Gagnant', 170, 60);
-
-  doc.setTextColor(30, 41, 59);
-  const drawRow = (yPos: number, label: string, rowData: any) => {
-    doc.text(label, 25, yPos);
-    doc.text(formatEuro(rowData.achat), 70, yPos);
-    doc.text(formatEuro(rowData.location), 120, yPos);
-    
-    if (rowData.achat > rowData.location) {
-      doc.setTextColor(22, 163, 74);
-      doc.text('ACHAT', 170, yPos);
-    } else {
-      doc.setTextColor(220, 38, 38);
-      doc.text('LOCATION', 170, yPos);
-    }
-    doc.setTextColor(30, 41, 59);
-    doc.line(20, yPos+3, 190, yPos+3);
-  };
-
-  drawRow(70, 'Revente à 5 ans', y5);
-  drawRow(80, 'Revente à 10 ans', y10);
-  drawRow(90, 'Revente à 20 ans', y20);
-
-  // --- Graphique Patrimoine Net (jsPDF line drawing) ---
+  // Le "Money Shot" : Résumé du gain
+  doc.setFillColor(243, 232, 255); // Purple 100
+  doc.rect(20, 60, 170, 35, 'F');
+  
   doc.setFontSize(12);
-  doc.setTextColor(139, 92, 246);
-  doc.text('Évolution du patrimoine net sur 25 ans', 20, 110);
+  doc.setTextColor(107, 33, 168); // Purple 800
+  doc.setFont('helvetica', 'bold');
+  doc.text(simResult.bascule_annee ? 'RÉSULTAT DE LA SIMULATION : ACHAT RENTABLE' : 'RÉSULTAT : LA LOCATION RESTE PLUS RENTABLE', 25, 70);
 
-  // Légende
-  doc.setLineWidth(1.5);
-  doc.setDrawColor(168, 85, 247); // Violet - Acheteur
-  doc.line(20, 117, 30, 117);
-  doc.setFontSize(9);
+  doc.setFontSize(18);
+  doc.setTextColor(88, 28, 135); // Purple 900
+  if (simResult.bascule_annee) {
+    doc.text(`L'achat devient rentable après ${simResult.bascule_annee} ans.`, 25, 80);
+    doc.setFontSize(14);
+    doc.setTextColor(22, 163, 74); // Green 600
+    doc.text(`Gain net estimé sur 25 ans : + ${formatEuro(gainNet)}`, 25, 90);
+  } else {
+    doc.text(`La location est plus rentable sur l'ensemble de la période.`, 25, 80);
+    doc.setFontSize(14);
+    doc.setTextColor(220, 38, 38); // Red 600
+    doc.text(`Perte estimée à l'achat sur 25 ans : ${formatEuro(gainNet)}`, 25, 90);
+  }
+
+  // Section 1 : Chiffres locaux
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text('1. Données réelles du marché', 20, 110);
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  doc.line(20, 113, 190, 113);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text('Acheteur', 33, 118);
+  doc.text(`Prix moyen (${userParams.typeBien}) :`, 25, 122);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${formatPrice(prixM2)}`, 80, 122);
 
-  doc.setDrawColor(59, 130, 246); // Bleu - Locataire
-  doc.line(65, 117, 75, 117);
-  doc.text('Locataire', 78, 118);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Loyer moyen :`, 120, 122);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${formatPrice(loyerM2)}`, 160, 122);
 
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Taxe Foncière :`, 25, 130);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${formatEuro(data.taxe_fonciere_moyenne)} / an`, 80, 130);
+
+  // Section 2 : Le Projet
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`2. Détail de votre projet (${surface} m²)`, 20, 145);
+  doc.line(20, 148, 190, 148);
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+
+  let yP = 158;
+  const drawParam = (label: string, val: string) => {
+    doc.text(label, 25, yP);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(val, 120, yP);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    yP += 8;
+  };
+
+  drawParam('Prix du bien (hors frais) :', formatEuro(prixTotal));
+  drawParam('Frais de notaire estimés :', formatEuro(fraisNotaire));
+  drawParam(`Frais d'agence (${userParams.fraisAgence}%) :`, formatEuro(fraisAgenceEuro));
+  drawParam('Apport personnel :', formatEuro(apport));
+  drawParam('Montant total à financer :', formatEuro(montantEmprunte));
+  drawParam(`Taux d'emprunt (sur ${userParams.dureePret} ans) :`, `${(userParams.tauxPret * 100).toFixed(2)} %`);
+
+  yP += 5;
+  doc.setFillColor(248, 250, 252);
+  doc.rect(20, yP - 5, 170, 48, 'F');
+  
+  yP += 2;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Détail de la mensualité d\'achat estimée', 25, yP);
+  doc.setFont('helvetica', 'normal');
+  yP += 8;
+  drawParam('Crédit immobilier :', `${formatEuro(mensualiteCredit)} / mois`);
+  drawParam(`Assurance emprunteur (${userParams.tauxAssurance}%) :`, `${formatEuro(assuranceMensuelle)} / mois`);
+  drawParam('Charges de copropriété :', `${formatEuro(chargesCoproMensuelle)} / mois`);
+  drawParam('Provision taxe foncière :', `${formatEuro(taxeFonciereMensuelle)} / mois`);
+  
+  yP += 2;
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(107, 33, 168);
+  doc.text('COÛT TOTAL MENSUEL :', 25, yP);
+  doc.text(`${formatEuro(mensualiteTotale)} / mois`, 120, yP);
+
+
+  // --- PAGE 2 : GRAPHIQUE & SCÉNARIOS ---
+  doc.addPage();
+  
+  // Header minimaliste page 2
+  doc.setFillColor(15, 23, 42); 
+  doc.rect(0, 0, 210, 20, 'F');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255); 
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Kalcul.app - Rapport Financier pour ${communeName}`, 20, 13);
+  
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text('3. Évolution du Patrimoine Net (avec inflation)', 20, 35);
+  doc.line(20, 38, 190, 38);
+
+  // Graphe
   const gX = 20;
-  const gY = 125;
+  const gY = 50;
   const gWidth = 170;
-  const gHeight = 75;
+  const gHeight = 90;
 
-  // Background & Cadre du graphique
   doc.setFillColor(248, 250, 252);
   doc.rect(gX, gY, gWidth, gHeight, 'F');
-  doc.setDrawColor(226, 232, 240);
+  doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.5);
   doc.rect(gX, gY, gWidth, gHeight);
 
@@ -222,199 +225,196 @@ function generatePDFBuffer(communeName: string, codeInsee: string, data: any, si
     if (maxVal === 0) maxVal = 100000;
 
     // Grille horizontale
-    for (let i = 1; i <= 3; i++) {
-      const lineY = gY + gHeight - (i * gHeight / 4);
-      doc.setDrawColor(241, 245, 249);
+    for (let i = 1; i <= 4; i++) {
+      const lineY = gY + gHeight - (i * gHeight / 5);
+      doc.setDrawColor(226, 232, 240);
       doc.line(gX, lineY, gX + gWidth, lineY);
-      const valLabel = Math.round((maxVal * (i / 4)) / 1000) + 'k€';
-      doc.setFontSize(7);
+      const valLabel = Math.round((maxVal * (i / 5)) / 1000) + ' k€';
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(148, 163, 184);
-      doc.text(valLabel, gX + 2, lineY - 1);
+      doc.text(valLabel, gX + 2, lineY - 2);
     }
 
     const numPoints = hist.length;
     const mapX = (idx: number) => gX + (idx / (numPoints - 1)) * gWidth;
     const mapY = (val: number) => gY + gHeight - (val / maxVal) * gHeight;
 
-    // Tracer courbe Acheteur (Violet)
-    doc.setDrawColor(168, 85, 247);
+    // Courbes
+    doc.setDrawColor(147, 51, 234); // Violet Acheteur
     doc.setLineWidth(1.5);
     for (let i = 0; i < numPoints - 1; i++) {
-      const x1 = mapX(i);
-      const y1 = mapY(hist[i].achat);
-      const x2 = mapX(i + 1);
-      const y2 = mapY(hist[i + 1].achat);
-      doc.line(x1, y1, x2, y2);
+      doc.line(mapX(i), mapY(hist[i].achat), mapX(i + 1), mapY(hist[i + 1].achat));
     }
-
-    // Tracer courbe Locataire (Bleu)
-    doc.setDrawColor(59, 130, 246);
+    doc.setDrawColor(59, 130, 246); // Bleu Locataire
     doc.setLineWidth(1.5);
     for (let i = 0; i < numPoints - 1; i++) {
-      const x1 = mapX(i);
-      const y1 = mapY(hist[i].location);
-      const x2 = mapX(i + 1);
-      const y2 = mapY(hist[i + 1].location);
-      doc.line(x1, y1, x2, y2);
+      doc.line(mapX(i), mapY(hist[i].location), mapX(i + 1), mapY(hist[i + 1].location));
     }
 
-    // Marqueur du point de bascule (annee a partir de laquelle l'achat devient plus
-    // rentable) : sans ca le graphique montre juste deux courbes qui se croisent quelque
-    // part, sans dire explicitement ou / quand par rapport au verdict du texte page 1.
+    // Ligne de bascule
     if (simResult.bascule_annee) {
       const basculeIdx = Number(simResult.bascule_annee) - 1;
       if (basculeIdx >= 0 && basculeIdx <= numPoints - 1) {
         const bx = mapX(basculeIdx);
-        doc.setDrawColor(234, 179, 8);
+        doc.setDrawColor(22, 163, 74);
         doc.setLineWidth(0.8);
-        doc.setLineDashPattern([2, 1.5], 0);
+        doc.setLineDashPattern([2, 2], 0);
         doc.line(bx, gY, bx, gY + gHeight);
         doc.setLineDashPattern([], 0);
+        
+        doc.setFillColor(22, 163, 74);
+        doc.rect(bx - 15, gY - 6, 30, 6, 'F');
         doc.setFontSize(8);
-        doc.setTextColor(161, 98, 7);
-        doc.text(`Bascule : ${simResult.bascule_annee} ans`, bx + 2, gY + 8);
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Année ${simResult.bascule_annee}`, bx, gY - 2, { align: 'center' });
       }
     }
   }
 
-  // Section 4: Tableau d'amortissement
-  doc.addPage();
-  doc.setFillColor(15, 23, 42); 
-  doc.rect(0, 0, 210, 25, 'F');
-  doc.setFontSize(14);
-  doc.setTextColor(255, 255, 255); 
-  doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
+  // Légende du graphe
+  doc.setLineWidth(2);
+  doc.setDrawColor(147, 51, 234);
+  doc.line(70, 148, 80, 148);
+  doc.setFontSize(10);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Patrimoine Acheteur', 83, 149);
 
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text('4. Tableau d\'amortissement complet', 20, 45);
+  doc.setDrawColor(59, 130, 246);
+  doc.line(130, 148, 140, 148);
+  doc.text('Épargne Locataire', 143, 149);
 
-  const amortissement = calculateAmortizationSchedule(
-    simResult.montant_emprunte, 
-    userParams.tauxPret, 
-    userParams.dureePret
-  );
+  // Scénarios
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text('4. Bilan selon la durée de détention', 20, 165);
+  doc.line(20, 168, 190, 168);
+
+  const getSimLine = (yearIndex: number) => hist[yearIndex] || { achat: 0, location: 0 };
+  const y5 = getSimLine(4);
+  const y10 = getSimLine(9);
+  const y20 = getSimLine(19);
 
   doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(15, 23, 42);
-  doc.rect(20, 55, 170, 8, 'F');
-  doc.text('Année', 25, 60);
-  doc.text('Capital Remboursé', 65, 60);
-  doc.text('Intérêts Payés', 115, 60);
-  doc.text('Capital Restant', 165, 60);
+  doc.setFillColor(241, 245, 249);
+  doc.rect(20, 175, 170, 10, 'F');
+  doc.setTextColor(15, 23, 42);
+  doc.text('Scénario de revente', 25, 182);
+  doc.text('Patrimoine Acheteur', 75, 182);
+  doc.text('Épargne Locataire', 120, 182);
+  doc.text('Différence Nette', 160, 182);
 
-  let yPosT = 70;
-  for (const ligne of amortissement) {
-    if (yPosT > 270) {
+  const drawScen = (yPos: number, label: string, dataObj: any) => {
+    doc.setFont('helvetica', 'normal');
+    doc.text(label, 25, yPos);
+    doc.text(formatEuro(dataObj.achat), 75, yPos);
+    doc.text(formatEuro(dataObj.location), 120, yPos);
+    
+    const diff = dataObj.achat - dataObj.location;
+    doc.setFont('helvetica', 'bold');
+    if (diff > 0) {
+      doc.setTextColor(22, 163, 74);
+      doc.text(`+ ${formatEuro(diff)}`, 160, yPos);
+    } else {
+      doc.setTextColor(220, 38, 38);
+      doc.text(formatEuro(diff), 160, yPos);
+    }
+    doc.setTextColor(15, 23, 42);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, yPos + 3, 190, yPos + 3);
+  };
+
+  drawScen(195, 'Revente à 5 ans', y5);
+  drawScen(205, 'Revente à 10 ans', y10);
+  drawScen(215, 'Revente à 20 ans', y20);
+
+
+  // --- PAGE 3 : CLIMAT & AMORTISSEMENT ---
+  doc.addPage();
+  doc.setFillColor(15, 23, 42); 
+  doc.rect(0, 0, 210, 20, 'F');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255); 
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Kalcul.app - Rapport Financier pour ${communeName}`, 20, 13);
+
+  // Loi Climat
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.text('5. Risque Énergétique (Loi Climat)', 20, 35);
+  doc.line(20, 38, 190, 38);
+
+  const isRisky = ratioPassoires > 0.25;
+  doc.setFillColor(isRisky ? 254 : 240, isRisky ? 226 : 253, isRisky ? 226 : 244); // Red or Green bg
+  doc.rect(20, 45, 170, 30, 'F');
+  
+  doc.setFontSize(12);
+  doc.setTextColor(isRisky ? 153 : 21, isRisky ? 27 : 128, isRisky ? 27 : 61);
+  doc.text(`Proportion de biens classés F et G (Passoires) : ${(ratioPassoires * 100).toFixed(1)} %`, 25, 55);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(15, 23, 42);
+  if (isRisky) {
+    doc.text(doc.splitTextToSize(`Risque élevé. Prévoyez systématiquement un budget rénovation (estimé ici à ${formatEuro(budgetRenoEstime)}) si le bien que vous visitez est classé G (interdit à la location en 2025).`, 160), 25, 65);
+  } else {
+    doc.text(doc.splitTextToSize(`Risque modéré sur cette commune. Si vous achetez une passoire, prévoyez un budget travaux estimé à ${formatEuro(budgetRenoEstime)}.`, 160), 25, 65);
+  }
+
+  // Tableau d'amortissement
+  doc.setFontSize(14);
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.text('6. Tableau d\'amortissement', 20, 90);
+  doc.line(20, 93, 190, 93);
+
+  const amortissement = calculateAmortizationSchedule(simResult.montant_emprunte, userParams.tauxPret, userParams.dureePret);
+
+  doc.setFontSize(10);
+  doc.setFillColor(15, 23, 42);
+  doc.setTextColor(255, 255, 255);
+  doc.rect(20, 100, 170, 8, 'F');
+  doc.text('Année', 25, 105);
+  doc.text('Capital Remboursé', 65, 105);
+  doc.text('Intérêts Payés', 115, 105);
+  doc.text('Capital Restant', 155, 105);
+
+  let yt = 115;
+  for (let i = 0; i < amortissement.length; i++) {
+    const ligne = amortissement[i];
+    
+    // Zebra striping
+    if (i % 2 === 0) {
+      doc.setFillColor(248, 250, 252);
+      doc.rect(20, yt - 5, 170, 8, 'F');
+    }
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${ligne.annee}`, 25, yt);
+    doc.text(formatEuro(ligne.capitalRembourseAnnuel), 65, yt);
+    doc.text(formatEuro(ligne.interetsAnnuels), 115, yt);
+    doc.text(formatEuro(ligne.capitalRestantDu), 155, yt);
+    
+    yt += 8;
+    if (yt > 270 && i < amortissement.length - 1) {
       doc.addPage();
       doc.setFillColor(15, 23, 42); 
-      doc.rect(0, 0, 210, 25, 'F');
-      doc.setFontSize(14);
+      doc.rect(0, 0, 210, 20, 'F');
+      doc.setFontSize(11);
       doc.setTextColor(255, 255, 255); 
-      doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
-      
-      doc.setFontSize(10);
-      doc.setFillColor(15, 23, 42);
-      doc.rect(20, 35, 170, 8, 'F');
-      doc.text('Année', 25, 40);
-      doc.text('Capital Remboursé', 65, 40);
-      doc.text('Intérêts Payés', 115, 40);
-      doc.text('Capital Restant', 165, 40);
-      
-      yPosT = 50;
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Kalcul.app - Rapport Financier pour ${communeName}`, 20, 13);
+      yt = 35;
     }
-    
-    doc.setTextColor(30, 41, 59);
-    doc.text(`Année ${ligne.annee}`, 25, yPosT);
-    doc.text(formatEuro(ligne.capitalRembourseAnnuel), 65, yPosT);
-    doc.text(formatEuro(ligne.interetsAnnuels), 115, yPosT);
-    doc.text(formatEuro(ligne.capitalRestantDu), 165, yPosT);
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, yPosT+3, 190, yPosT+3);
-    
-    yPosT += 10;
   }
-
-  // Total des interets payes sur la duree : le tableau ligne par ligne ne donne jamais
-  // le cout reel du credit d'un coup d'oeil, seulement des variations d'une annee a l'autre.
-  const totalInterets = amortissement.reduce((sum: number, l: { interetsAnnuels: number }) => sum + l.interetsAnnuels, 0);
-  if (yPosT > 270) {
-    doc.addPage();
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 25, 'F');
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
-    yPosT = 45;
-  }
-  doc.setFillColor(248, 250, 252);
-  doc.rect(20, yPosT, 170, 15, 'F');
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(`Coût total du crédit sur ${userParams.dureePret} ans (intérêts payés) : ${formatEuro(totalInterets)}`, 25, yPosT + 9);
-  doc.setFont('helvetica', 'normal');
-
-  // Section: Risque Loi Climat
-  doc.addPage();
-  doc.setFillColor(15, 23, 42); 
-  doc.rect(0, 0, 210, 25, 'F');
-  doc.setFontSize(14);
-  doc.setTextColor(255, 255, 255); 
-  doc.text(`Kalcul.app - ${communeName}`, 105, 16, { align: 'center' });
-
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text('5. Risque Loi Climat (DPE)', 20, 45);
-
-  doc.setFontSize(12);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Proportion de biens "Passoires Thermiques" (F et G) : ${(ratioPassoires * 100).toFixed(1)} %`, 20, 55);
-  
-  doc.setFontSize(11);
-  if (ratioPassoires > 0.25) {
-    doc.setTextColor(220, 38, 38); 
-    doc.text(`ATTENTION : Le risque énergétique est très élevé sur cette commune.`, 20, 65);
-    doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`En cas d'achat d'un bien classé G, il sera interdit à la location dès 2025. Prévoyez une décote à l'achat et un budget travaux estimé à ${formatEuro(budgetRenoEstime)} pour une rénovation globale.`, 170), 20, 75);
-  } else {
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Le parc immobilier local est relativement sain.`, 20, 65);
-    doc.setTextColor(71, 85, 105);
-    doc.text(doc.splitTextToSize(`Toutefois, vérifiez toujours le DPE avant d'acheter. Les biens classés F et G nécessiteront des travaux importants de l'ordre de ${formatEuro(budgetRenoEstime)}.`, 170), 20, 75);
-  }
-
-  // Section 6: Fiabilite des donnees & liens utiles
-  doc.setFontSize(14);
-  doc.setTextColor(139, 92, 246);
-  doc.text('6. Fiabilité des données & pour aller plus loin', 20, 100);
-
-  doc.setFontSize(10);
-  doc.setTextColor(71, 85, 105);
-  const fiabilite = data.fiabilite_score !== null && data.fiabilite_score !== undefined ? `${data.fiabilite_score}/10` : 'non disponible';
-  doc.text(doc.splitTextToSize(
-    `Ce rapport s'appuie sur 4 sources de données publiques officielles pour ${communeName} : prix au m² (DVF), ` +
-    `diagnostics de performance énergétique (ADEME), taxe foncière (DGFiP) et loyers de marché (ANIL/DHUP). ` +
-    `Score de fiabilité des données pour cette commune : ${fiabilite}.`,
-    170
-  ), 20, 110);
-
-  doc.setFontSize(11);
-  doc.setTextColor(30, 41, 59);
-  doc.text('Consultez le détail en ligne, mis à jour automatiquement :', 20, 135);
-
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kalcul.app';
-  doc.setFontSize(10);
-  doc.setTextColor(37, 99, 235);
-  doc.textWithLink('- Revoir et ajuster cette simulation en ligne', 20, 145, { url: `${baseUrl}/acheter-ou-louer/${codeInsee}` });
-  doc.textWithLink('- Détail de la taxe foncière à ' + communeName, 20, 153, { url: `${baseUrl}/taxe-fonciere/${codeInsee}` });
-  doc.textWithLink('- État du parc énergétique (DPE) à ' + communeName, 20, 161, { url: `${baseUrl}/renovation-energetique/${codeInsee}` });
 
   // Footer
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(148, 163, 184);
-  doc.text('© 2026 Kalcul.app - Données fournies à titre indicatif et non contractuel', 105, 280, { align: 'center' });
+  doc.text('© 2026 Kalcul.app - Données fournies à titre indicatif et non contractuel', 105, 285, { align: 'center' });
 
   return doc.output('arraybuffer');
 }
