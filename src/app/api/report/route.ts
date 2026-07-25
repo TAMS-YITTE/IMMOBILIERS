@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { jsPDF } from 'jspdf';
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 import { simulateBuyVsRent, calculateAmortizationSchedule, calculateMonthlyMortgage } from '@/lib/calculator';
 
@@ -11,6 +12,14 @@ export const runtime = 'nodejs';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy', {
   apiVersion: '2023-10-16' as Stripe.LatestApiVersion,
 });
+
+// Client service_role : l'enregistrement d'un achat se fait cote serveur, apres
+// validation du paiement Stripe. On evite ainsi une policy INSERT publique sur
+// purchased_reports (qui laisserait n'importe qui inserer de fausses lignes).
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy_key'
+);
 
 // Regroupe les milliers avec une espace ASCII normale (0x20). toLocaleString('fr-FR')
 // insere un caractere d espacement special (insecable ou insecable etroit selon la
@@ -483,7 +492,7 @@ export async function GET(request: Request) {
     if (userId) {
       // Save the purchase in the database so the user can download it later
       // We use upsert so it doesn't fail if the user clicks the link multiple times
-      await supabase.from('purchased_reports').upsert({
+      await supabaseAdmin.from('purchased_reports').upsert({
         session_id: sessionId,
         user_id: userId,
         code_insee: codeInsee || '',

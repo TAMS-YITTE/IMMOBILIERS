@@ -16,8 +16,7 @@ CREATE POLICY "Users can view their own purchases"
 ON public.purchased_reports FOR SELECT 
 USING (auth.uid() = user_id);
 
--- Politique : Le serveur (ou n'importe qui) peut insérer, mais seul l'utilisateur peut lire
--- Cela permet à notre route d'API sans token admin d'insérer l'achat
-CREATE POLICY "Anyone can insert purchases" 
-ON public.purchased_reports FOR INSERT 
-WITH CHECK (true);
+-- Pas de politique INSERT publique : l'enregistrement d'un achat se fait cote serveur
+-- via la cle service_role (route /api/report, apres validation du paiement Stripe), qui
+-- contourne le RLS. Une policy "WITH CHECK (true)" laisserait n'importe qui, avec la cle
+-- anon publique, inserer de fausses lignes (y compris sur le user_id d'un autre).

@@ -339,7 +339,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          // Le login n'est plus requis pour acheter : un invite a user === null.
+          // On envoie une chaine vide, l'achat n'est simplement pas rattache a un compte.
+          userId: user?.id || '',
           codeInsee: insee,
           communeName: metrics?.nom || 'Votre ville',
           surface,

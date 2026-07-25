@@ -77,11 +77,13 @@ export default function Dashboard() {
           .order('created_at', { ascending: false })
       ]);
       
-      if (simsRes.error) throw simsRes.error;
-      if (reportsRes.error) throw reportsRes.error;
-      
-      setSimulations(simsRes.data || []);
-      setPurchasedReports(reportsRes.data || []);
+      // Chaque section est independante : un echec sur les rapports achetes (ex. table
+      // absente) ne doit pas faire disparaitre les simulations sauvegardees, et inversement.
+      if (simsRes.error) console.error('saved_simulations:', simsRes.error);
+      else setSimulations(simsRes.data || []);
+
+      if (reportsRes.error) console.error('purchased_reports:', reportsRes.error);
+      else setPurchasedReports(reportsRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
