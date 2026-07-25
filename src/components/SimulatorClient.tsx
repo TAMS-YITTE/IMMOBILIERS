@@ -329,11 +329,6 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleCheckout = async () => {
-    if (!user) {
-      setIsAuthModalOpen(true);
-      return;
-    }
-
     try {
       setCheckoutLoading(true);
       const metrics = communeMetrics[insee];
