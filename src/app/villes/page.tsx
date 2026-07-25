@@ -1,64 +1,74 @@
-import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
-import VillesClient from "./VillesClient";
+import Link from "next/link";
+import { Metadata } from "next";
+
+export const revalidate = 86400; // Cache for 24h
 
 export const metadata: Metadata = {
-  title: "Annuaire des Villes",
-  description: "Explorez l'annuaire complet des communes françaises pour découvrir où l'achat immobilier est plus rentable que la location.",
+  title: "Annuaire des villes | Kalcul.app",
+  description: "Parcourez notre annuaire pour découvrir si l'achat ou la location est le plus rentable dans votre ville.",
 };
 
-// Using Next.js ISR (revalidate every hour)
-export const revalidate = 3600;
+export default async function VillesDirectory() {
+  // Fetch top 3000 cities by reliability/size to avoid an overly massive page
+  // We can group them by department
+  const { data } = await supabase
+    .from('communes_metrics')
+    .select('code_insee, nom_commune')
+    .not('prix_m2_appart_moyen', 'is', null)
+    .order('fiabilite_score', { ascending: false })
+    .limit(2000);
 
-async function fetchAllVilles() {
-  // L'API Supabase plafonne chaque requête à 1000 lignes : avec ~32 800 communes,
-  // il faut paginer pour récupérer la liste complète plutôt que les 1000 premières
-  // (alphabétiquement), ce qui excluait silencieusement des villes comme Paris ou Lyon.
-  const PAGE_SIZE = 1000;
-  const all: { code_insee: string; nom_commune: string; codes_postaux: string[] | null }[] = [];
-  let from = 0;
+  const communes = data || [];
 
-  while (true) {
-    const { data, error } = await supabase
-      .from("communes_metrics")
-      .select("code_insee, nom_commune, codes_postaux")
-      .order("nom_commune", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
+  // Group by department (first 2 chars of INSEE code)
+  const byDept: Record<string, typeof communes> = {};
+  communes.forEach(c => {
+    const dept = c.code_insee.substring(0, 2);
+    if (!byDept[dept]) byDept[dept] = [];
+    byDept[dept].push(c);
+  });
 
-    if (error) return { data: null, error };
-    if (!data || data.length === 0) break;
-
-    all.push(...data);
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  return { data: all, error: null };
-}
-
-export default async function VillesPage() {
-  const { data: villes, error } = await fetchAllVilles();
-
-  if (error) {
-    console.error("Error fetching cities:", error);
-    return (
-      <main className="max-w-7xl mx-auto p-6 py-12">
-        <h1 className="text-4xl font-extrabold mb-4 text-white">Annuaire des Villes</h1>
-        <p className="text-red-400">Impossible de charger les villes pour le moment.</p>
-      </main>
-    );
-  }
+  // Sort departments
+  const sortedDepts = Object.keys(byDept).sort();
 
   return (
-    <main className="max-w-7xl mx-auto p-6 py-12">
-      <h1 className="text-4xl font-extrabold mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-        Faut-il acheter ou louer dans votre ville ?
-      </h1>
-      <p className="text-slate-400 mb-12 text-lg">
-        Découvrez notre analyse financière précise, ville par ville, basée sur les données réelles du marché.
-      </p>
+    <main className="min-h-screen bg-slate-50 text-slate-900 py-12 px-6">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-slate-900 mb-4">Annuaire des Villes</h1>
+        <p className="text-slate-600 mb-12">
+          Découvrez notre analyse d'achat vs location pour les principales communes de France.
+        </p>
 
-      <VillesClient initialVilles={villes || []} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sortedDepts.map(dept => {
+            // Sort communes alphabetically within the department
+            const deptCommunes = byDept[dept].sort((a, b) => 
+              (a.nom_commune || '').localeCompare(b.nom_commune || '')
+            );
+
+            return (
+              <div key={dept} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <h2 className="text-2xl font-bold text-purple-700 mb-4 border-b border-purple-100 pb-2">
+                  Département {dept}
+                </h2>
+                <ul className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  {deptCommunes.map(c => (
+                    <li key={c.code_insee}>
+                      <Link 
+                        href={`/acheter-ou-louer/${c.code_insee}`}
+                        className="text-slate-600 hover:text-purple-600 hover:underline transition-colors block truncate"
+                      >
+                        {c.nom_commune}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </main>
   );
 }

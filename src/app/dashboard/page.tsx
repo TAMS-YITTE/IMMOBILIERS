@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
-import { Loader2, ArrowLeft, Building2, Calendar, MapPin, Trash2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowLeft, Building2, Calendar, MapPin, Trash2, ArrowRight, Download, FileText } from 'lucide-react';
 
 interface SavedSimulation {
   id: string;
@@ -21,10 +21,19 @@ interface SavedSimulation {
   created_at: string;
 }
 
+interface PurchasedReport {
+  id: string;
+  session_id: string;
+  code_insee: string;
+  commune_name: string;
+  created_at: string;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [simulations, setSimulations] = useState<SavedSimulation[]>([]);
+  const [purchasedReports, setPurchasedReports] = useState<PurchasedReport[]>([]);
 
   useEffect(() => {
     // Authentication Check
@@ -55,14 +64,24 @@ export default function Dashboard() {
   const fetchSimulations = async (userId: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('saved_simulations')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      const [simsRes, reportsRes] = await Promise.all([
+        supabase
+          .from('saved_simulations')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('purchased_reports')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+      ]);
       
-      if (error) throw error;
-      setSimulations(data || []);
+      if (simsRes.error) throw simsRes.error;
+      if (reportsRes.error) throw reportsRes.error;
+      
+      setSimulations(simsRes.data || []);
+      setPurchasedReports(reportsRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -172,6 +191,47 @@ export default function Dashboard() {
                       className="text-sm font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1"
                     >
                       Reprendre <ArrowRight size={16} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Purchased Reports List */}
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm p-6 md:p-8">
+          <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Download className="text-blue-600" /> Mes rapports PDF achetés
+          </h2>
+
+          {purchasedReports.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+              <p className="text-slate-500">Vous n'avez pas encore acheté de rapport.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {purchasedReports.map((report) => (
+                <div key={report.id} className="group bg-gradient-to-b from-blue-50 to-white border border-blue-100 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all relative">
+                  
+                  <div className="flex items-center gap-2 text-blue-700 font-bold text-lg mb-2">
+                    <FileText size={20} />
+                    {report.commune_name}
+                  </div>
+                  
+                  <div className="flex items-center gap-1 text-xs text-slate-500 mb-6">
+                    <Calendar size={12} />
+                    Acheté le {new Date(report.created_at).toLocaleDateString('fr-FR')}
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                    <a 
+                      href={`/api/report?session_id=${report.session_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 w-full justify-center bg-white border border-blue-200 py-2 rounded-xl transition-colors"
+                    >
+                      Télécharger le PDF <Download size={16} />
                     </a>
                   </div>
                 </div>

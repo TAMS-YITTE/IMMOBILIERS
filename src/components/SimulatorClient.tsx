@@ -329,6 +329,11 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleCheckout = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     try {
       setCheckoutLoading(true);
       const metrics = communeMetrics[insee];
@@ -339,6 +344,7 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userId: user.id,
           codeInsee: insee,
           communeName: metrics?.nom || 'Votre ville',
           surface,

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      codeInsee, communeName, surface, apport, typeBien, tauxPret, dureePret,
+      userId, codeInsee, communeName, surface, apport, typeBien, tauxPret, dureePret,
       tauxAssurance, fraisAgence, chargesCopro, provisionReno,
     } = body;
 
@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       success_url: `${baseUrl}/paiement-reussi?session_id={CHECKOUT_SESSION_ID}&code=${codeInsee}`,
       cancel_url: `${baseUrl}/acheter-ou-louer/${codeInsee}`,
       metadata: {
+        userId: userId || '',
         codeInsee,
         communeName,
         surface: surface?.toString() || '',

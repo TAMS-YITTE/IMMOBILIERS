@@ -24,20 +24,25 @@ export default function Footer() {
 
         {/* Links Col 1 */}
         <div className="space-y-4">
-          <h4 className="font-semibold text-slate-900">Outils & Données</h4>
-          <ul className="space-y-2 text-sm text-slate-500">
+          <h3 className="text-sm font-semibold text-slate-900 tracking-wider uppercase">Produit</h3>
+          <ul className="mt-4 space-y-4 text-sm">
             <li>
-              <Link href="/villes" className="hover:text-purple-600 transition-colors flex items-center gap-2">
-                <Building2 className="w-4 h-4" /> Annuaire des Villes
+              <Link href="/villes" className="text-slate-600 hover:text-purple-600 transition-colors">
+                Annuaire des villes
               </Link>
             </li>
             <li>
-              <Link href="/carte" className="hover:text-purple-600 transition-colors flex items-center gap-2">
+              <Link href="/blog" className="text-slate-600 hover:text-purple-600 transition-colors">
+                Blog Immobilier
+              </Link>
+            </li>
+            <li>
+              <Link href="/carte" className="hover:text-purple-600 transition-colors flex items-center gap-2 text-slate-600">
                 <Map className="w-4 h-4" /> Carte de France
               </Link>
             </li>
             <li>
-              <Link href="/outils/mensualite" className="hover:text-purple-600 transition-colors flex items-center gap-2">
+              <Link href="/outils/mensualite" className="hover:text-purple-600 transition-colors flex items-center gap-2 text-slate-600">
                 <Wrench className="w-4 h-4" /> Calcul Mensualité
               </Link>
             </li>

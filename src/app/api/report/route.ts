@@ -478,6 +478,18 @@ export async function GET(request: Request) {
     // 2. Fetch the actual commune data for the PDF
     const codeInsee = session.metadata?.codeInsee;
     const communeName = session.metadata?.communeName || 'votre ville';
+    const userId = session.metadata?.userId;
+
+    if (userId) {
+      // Save the purchase in the database so the user can download it later
+      // We use upsert so it doesn't fail if the user clicks the link multiple times
+      await supabase.from('purchased_reports').upsert({
+        session_id: sessionId,
+        user_id: userId,
+        code_insee: codeInsee || '',
+        commune_name: communeName
+      }, { onConflict: 'session_id' });
+    }
 
     let data: any = {};
     if (codeInsee) {

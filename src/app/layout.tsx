@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -22,8 +22,18 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.kalcul.app';
 
+export const viewport: Viewport = {
+  themeColor: "#9333ea",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Kalcul",
+  },
   title: {
     default: "Kalcul.app | Simulateur Achat vs Location Immobilier",
     template: "%s | Kalcul.app"
