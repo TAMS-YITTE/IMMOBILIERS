@@ -1,7 +1,8 @@
 "use client"
 
-import React from 'react';
-import { Briefcase, Code2, Gauge, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Briefcase, Code2, Gauge, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const TIERS = [
   {
@@ -26,6 +27,33 @@ const TIERS = [
 ];
 
 export default function ProPage() {
+  const [siteName, setSiteName] = useState('');
+  const [email, setEmail] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (honeypot.trim() !== '') { setSuccess(true); return; } // rejet silencieux des bots
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const { error } = await supabase.from('pro_leads').insert({
+        site_name: siteName,
+        email,
+      });
+      if (error) throw error;
+      setSuccess(true);
+    } catch (err) {
+      console.error('Erreur envoi demande pro:', err);
+      setErrorMsg("Une erreur est survenue. Réessayez ou écrivez à contact@kalcul.app.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans">
       <div className="max-w-6xl mx-auto space-y-16 py-12">
@@ -93,25 +121,60 @@ export default function ProPage() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-xl mx-auto shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">Intéressé(e) ?</h3>
-          <p className="text-sm text-slate-500 mb-6 text-center">
-            Laissez-nous vos coordonnées, nous vous recontactons pour une démo du widget adaptée à votre site.
-          </p>
-          <form className="space-y-4">
-            <input
-              type="text"
-              placeholder="Nom du site / de l'agence"
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 placeholder:text-slate-400"
-            />
-            <input
-              type="email"
-              placeholder="Email professionnel"
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 placeholder:text-slate-400"
-            />
-            <button type="button" className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150">
-              Demander une démo
-            </button>
-          </form>
+          {success ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Demande enregistrée !</h3>
+              <p className="text-sm text-slate-500">
+                Merci, nous vous recontacterons à <strong>{email}</strong> pour une démo adaptée à votre site.
+              </p>
+            </div>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">Intéressé(e) ?</h3>
+              <p className="text-sm text-slate-500 mb-6 text-center">
+                Laissez-nous vos coordonnées, nous vous recontactons pour une démo du widget adaptée à votre site.
+              </p>
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                {/* Honeypot anti-bot */}
+                <input
+                  type="text"
+                  name="company_url"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  className="opacity-0 absolute -z-10 h-0 w-0 pointer-events-none"
+                />
+                <input
+                  type="text"
+                  required
+                  value={siteName}
+                  onChange={(e) => setSiteName(e.target.value)}
+                  placeholder="Nom du site / de l'agence"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 placeholder:text-slate-400"
+                />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email professionnel"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 placeholder:text-slate-400"
+                />
+                {errorMsg && <p className="text-red-600 text-xs text-center">{errorMsg}</p>}
+                <button
+                  type="submit"
+                  disabled={submitting || !email || !siteName}
+                  className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? <Loader2 className="animate-spin" size={20} /> : "Demander une démo"}
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
       </div>
