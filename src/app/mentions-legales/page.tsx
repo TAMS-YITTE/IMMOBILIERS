@@ -11,7 +11,6 @@ export default function MentionsLegalesPage() {
           Le site Kalcul.app est édité par YITTE, entreprise individuelle immatriculée au Registre du Commerce et des Sociétés.
         </p>
         <ul>
-          <li>SIREN : 919 805 028</li>
           <li>SIRET : 919 805 028 00017</li>
           <li>N° de TVA intracommunautaire : FR30919805028</li>
           <li>Siège social : 65 B rue Alexandre Bickart, 77500 Chelles, France</li>
