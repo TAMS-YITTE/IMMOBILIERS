@@ -10,16 +10,24 @@ export const metadata: Metadata = {
 };
 
 export default async function VillesDirectory() {
-  // Fetch top 3000 cities by reliability/size to avoid an overly massive page
-  // We can group them by department
-  const { data } = await supabase
-    .from('communes_metrics')
-    .select('code_insee, nom_commune')
-    .not('prix_m2_appart_moyen', 'is', null)
-    .order('fiabilite_score', { ascending: false })
-    .limit(2000);
-
-  const communes = data || [];
+  // PostgREST plafonne chaque reponse a 1000 lignes : un .limit(2000) n'en renvoyait
+  // que 1000. On pagine par .range() pour lister vraiment ~5000 communes (annuaire =
+  // point d'entree du maillage vers les 25 000 pages).
+  const TARGET = 5000;
+  const PAGE_SIZE = 1000;
+  const communes: { code_insee: string; nom_commune: string | null }[] = [];
+  for (let from = 0; from < TARGET; from += PAGE_SIZE) {
+    const { data: page, error } = await supabase
+      .from('communes_metrics')
+      .select('code_insee, nom_commune')
+      .not('prix_m2_appart_moyen', 'is', null)
+      .order('fiabilite_score', { ascending: false })
+      .order('code_insee', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error || !page || page.length === 0) break;
+    communes.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
 
   // Group by department (first 2 chars of INSEE code)
   const byDept: Record<string, typeof communes> = {};

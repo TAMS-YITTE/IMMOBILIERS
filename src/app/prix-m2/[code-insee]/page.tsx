@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import CityPageNav from "@/components/CityPageNav";
+import CityNearbyLinks from "@/components/CityNearbyLinks";
 import Link from "next/link";
 import { Metadata } from "next";
 import { TrendingUp, ArrowRight } from "lucide-react";
@@ -124,6 +125,8 @@ export default async function PrixM2Page({ params }: Props) {
         <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Prix médian calculé sur les transactions DVF (Demandes de Valeurs Foncières, DGFiP), à titre indicatif. Ne remplace pas une estimation par un professionnel.
         </p>
+
+        <CityNearbyLinks codeInsee={insee} cityName={cityName} />
       </div>
     </main>
   );

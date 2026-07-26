@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound, ChevronDown, Sliders } from 'lucide-react';
+import { Home, FileText, CheckCircle2, TrendingUp, Wallet, Loader2, X, ShieldCheck, Landmark, Leaf, KeyRound, ChevronDown, Sliders, Download, Lock } from 'lucide-react';
 import { simulateBuyVsRent } from '@/lib/calculator';
 import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
@@ -656,55 +656,72 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
-              <div className="bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
+              {/* CTA principal : le rapport PDF (seule source de revenu directe) */}
+              <div className="lg:col-span-3 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-200 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-sm">
+                <span className="absolute top-5 right-5 bg-blue-600 text-white text-[11px] font-semibold px-3 py-1 rounded-full">
+                  Le plus complet
+                </span>
+                <h4 className="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
+                  <FileText className="text-blue-600" />
+                  Votre rapport complet pour {currentCityName}
+                </h4>
+                <p className="text-sm text-slate-600 mb-5">
+                  Toute l&apos;analyse en PDF, avec vos chiffres exacts — à garder, imprimer ou montrer à votre banquier.
+                </p>
+
+                {/* Apercu concret de ce qu'on achete */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 mb-6 text-sm text-slate-700">
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Détail de la mensualité (6 postes)</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Coût total du crédit</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Année de bascule achat/location</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Tableau d&apos;amortissement complet</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Graphique patrimoine sur 25 ans</span>
+                  <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600 shrink-0"/> Sources et méthodologie</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCheckout}
+                  disabled={checkoutLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_20px_theme(colors.cyan.400/50%)] text-white font-semibold rounded-full py-3.5 transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : <><Download size={18} /> Obtenir mon rapport — 4,99 €</>}
+                </button>
+
+                {/* Reassurance */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-slate-500">
+                  <span className="flex items-center gap-1"><Lock size={12} /> Paiement sécurisé Stripe</span>
+                  <span className="flex items-center gap-1"><Download size={12} /> Téléchargement immédiat</span>
+                  <span className="flex items-center gap-1"><ShieldCheck size={12} /> Sans abonnement · sans démarchage</span>
+                </div>
+              </div>
+
+              {/* CTA secondaire : mise en relation courtier */}
+              <div className="lg:col-span-2 bg-gradient-to-b from-purple-50 to-white border border-purple-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
                 <div className="absolute inset-0 bg-purple-500/0 group-hover:bg-purple-500/5 transition-colors" />
                 <h4 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <Wallet className="text-purple-600" />
-                  Passez à l&apos;action
+                  Besoin de financer ?
                 </h4>
-                <p className="text-sm text-slate-600 mb-6">
-                  Vos mensualités estimées sont de <strong className="text-purple-700">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Obtenez le meilleur taux.
+                <p className="text-sm text-slate-600 mb-5">
+                  Mensualité estimée : <strong className="text-purple-700">{simulationResult?.mensualite_banque_estimee?.toLocaleString() || 0} €</strong>. Faites-vous accompagner pour décrocher le meilleur taux.
                 </p>
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200">
                     <CheckCircle2 className="text-purple-600 shrink-0 mt-0.5" size={16} />
                     <p className="text-xs text-slate-600 leading-tight">
-                      Mise en relation gratuite et sans engagement avec les meilleurs courtiers de votre région.
+                      Mise en relation gratuite et sans engagement avec un courtier de votre région.
                     </p>
                   </div>
                   <button
                     onClick={() => setShowLeadModal(true)}
-                    className="w-full bg-gradient-to-r from-purple-600 to-fuchsia-500 hover:shadow-[0_0_20px_theme(colors.purple.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150"
+                    className="w-full bg-white border border-purple-300 text-purple-700 hover:bg-purple-50 font-medium rounded-full py-3 transition-all duration-150"
                   >
                     Trouver mon financement
                   </button>
                 </div>
-              </div>
-
-              <div className="bg-gradient-to-b from-blue-50 to-white border border-blue-200 rounded-3xl p-6 relative overflow-hidden group shadow-sm">
-                <div className="absolute inset-0 bg-blue-500/0 group-hover:bg-blue-500/5 transition-colors" />
-                <h4 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                  <FileText className="text-blue-600" />
-                  Rapport Détaillé
-                </h4>
-                <p className="text-sm text-slate-600 mb-6">
-                  Analysez les chiffres en profondeur sans être démarché. Téléchargez notre rapport PDF.
-                </p>
-                <ul className="space-y-2 mb-6 text-sm text-slate-600">
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> Comparaison de 3 scénarios</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> Tableaux d&apos;amortissement complets</li>
-                  <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-600"/> 100% anonyme, aucun appel</li>
-                </ul>
-                <button
-                  type="button"
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-[0_0_20px_theme(colors.cyan.400/50%)] text-white font-medium rounded-full py-3 transition-all duration-150 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {checkoutLoading ? <Loader2 className="animate-spin" size={20} /> : "Acheter le rapport (4,99 €)"}
-                </button>
               </div>
 
             </div>

@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import CityPageNav from "@/components/CityPageNav";
+import CityNearbyLinks from "@/components/CityNearbyLinks";
 import Link from "next/link";
 import { Metadata } from "next";
 import { KeyRound, ArrowRight } from "lucide-react";
@@ -131,6 +132,8 @@ export default async function LoyerMoyenPage({ params }: Props) {
         <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Indicateur de loyer d&apos;annonce par commune (ANIL/Observatoires des loyers), à titre indicatif. Le loyer réel dépend de l&apos;état et de l&apos;emplacement précis du bien.
         </p>
+
+        <CityNearbyLinks codeInsee={insee} cityName={cityName} />
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import CityPageNav from "@/components/CityPageNav";
+import CityNearbyLinks from "@/components/CityNearbyLinks";
 import Link from "next/link";
 import { Metadata } from "next";
 import { Landmark, ArrowRight, Info } from "lucide-react";
@@ -122,6 +123,8 @@ export default async function TaxeFoncierePage({ params }: Props) {
         <p className="text-xs text-slate-500 text-center max-w-xl mx-auto">
           Montant moyen basé sur les données de fiscalité locale (DGFiP), à titre indicatif. Le montant réel dépend de la valeur locative cadastrale du bien.
         </p>
+
+        <CityNearbyLinks codeInsee={insee} cityName={cityName} />
       </div>
     </main>
   );

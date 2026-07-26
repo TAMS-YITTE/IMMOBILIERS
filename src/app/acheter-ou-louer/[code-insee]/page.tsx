@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import SimulatorClient from "@/components/SimulatorClient";
+import CityPageNav from "@/components/CityPageNav";
+import CityNearbyLinks from "@/components/CityNearbyLinks";
 import { Metadata } from "next";
 
 // Using ISR to cache these pages on CDN, refreshing them every 24 hours
@@ -99,6 +101,13 @@ export default async function CitySimulatorPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SimulatorClient initialInsee={insee} initialCommuneMetrics={initialMetrics} />
+
+      {/* Maillage interne (rendu serveur) : les autres analyses de la meme ville
+          + des communes voisines, pour le crawl et la navigation. */}
+      <div className="bg-slate-50 px-6 py-12 space-y-8">
+        <CityPageNav codeInsee={insee} current="acheter-ou-louer" />
+        <CityNearbyLinks codeInsee={insee} cityName={data.nom_commune || `Commune ${insee}`} />
+      </div>
     </>
   );
 }
