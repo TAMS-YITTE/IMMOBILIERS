@@ -660,12 +660,12 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
               {/* CTA principal : le rapport PDF (seule source de revenu directe) */}
               <div className="lg:col-span-3 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-200 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-sm">
-                <span className="absolute top-5 right-5 bg-blue-600 text-white text-[11px] font-semibold px-3 py-1 rounded-full">
+                <span className="inline-block bg-blue-600 text-white text-[11px] font-semibold px-3 py-1 rounded-full mb-3">
                   Le plus complet
                 </span>
-                <h4 className="text-xl font-bold text-slate-900 mb-1 flex items-center gap-2">
-                  <FileText className="text-blue-600" />
-                  Votre rapport complet pour {currentCityName}
+                <h4 className="text-xl font-bold text-slate-900 mb-1 flex items-start gap-2">
+                  <FileText className="text-blue-600 shrink-0 mt-0.5" />
+                  <span>Votre rapport complet pour {currentCityName}</span>
                 </h4>
                 <p className="text-sm text-slate-600 mb-5">
                   Toute l&apos;analyse en PDF, avec vos chiffres exacts — à garder, imprimer ou montrer à votre banquier.
