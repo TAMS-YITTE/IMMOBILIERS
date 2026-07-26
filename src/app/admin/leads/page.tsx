@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Lock, RefreshCw } from 'lucide-react';
+import { Lock, RefreshCw, Download } from 'lucide-react';
 
 interface Lead {
   id: string;
@@ -12,6 +12,31 @@ interface Lead {
   montant_projet: number;
   statut: string | null;
   created_at: string;
+  // Champs supplementaires renvoyes par l'API (select *), utiles a l'export courtier
+  type_bien?: string | null;
+  surface?: number | null;
+  apport?: number | null;
+  mensualite_estimee?: number | null;
+  taux_pret?: number | null;
+  duree_pret?: number | null;
+  consentement_contact_courtier?: boolean | null;
+}
+
+// Serialise les leads en CSV (separateur point-virgule pour Excel FR, BOM UTF-8
+// pour les accents). Chaque valeur est echappee si elle contient ; " ou un saut de ligne.
+function leadsToCsv(rows: Lead[]): string {
+  if (rows.length === 0) return '';
+  const cols = Array.from(rows.reduce((set, r) => {
+    Object.keys(r).forEach((k) => set.add(k));
+    return set;
+  }, new Set<string>()));
+  const esc = (v: unknown) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = cols.join(';');
+  const lines = rows.map((r) => cols.map((c) => esc((r as unknown as Record<string, unknown>)[c])).join(';'));
+  return '﻿' + [header, ...lines].join('\r\n');
 }
 
 export default function AdminLeadsPage() {
@@ -75,6 +100,18 @@ export default function AdminLeadsPage() {
     fetchLeads(password);
   };
 
+  const downloadCsv = () => {
+    const csv = leadsToCsv(leads);
+    if (!csv) return;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leads-kalcul-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (!authenticated) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900">
@@ -128,6 +165,14 @@ export default function AdminLeadsPage() {
           >
             Voir les Ventes
           </Link>
+          <button
+            onClick={downloadCsv}
+            disabled={leads.length === 0}
+            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-xs text-white px-4 py-2 rounded-full transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Download size={14} />
+            Exporter CSV ({leads.length})
+          </button>
           <button
             onClick={() => fetchLeads(password)}
             className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-100 text-xs text-slate-600 px-4 py-2 rounded-full transition-colors shadow-sm"

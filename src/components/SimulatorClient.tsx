@@ -768,9 +768,9 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
                 <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Demande envoyée !</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Demande enregistrée !</h3>
                 <p className="text-slate-600">
-                  Un de nos courtiers partenaires spécialisés sur {currentCityName} va vous recontacter très vite pour votre projet.
+                  Votre demande de financement pour {currentCityName} est bien enregistrée. Un courtier partenaire vous recontactera pour étudier votre projet.
                 </p>
                 <button
                   onClick={() => {
