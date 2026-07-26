@@ -9,20 +9,20 @@ const TIERS = [
     nom: "Starter",
     prix: "49€",
     description: "Pour un site local ou un blog immobilier régional.",
-    features: ["1 widget (indicateur au choix)", "1 000 requêtes / mois", "Mise à jour des données 2x/an"],
+    features: ["1 indicateur au choix (prix, loyers…)", "Jusqu'à 1 000 visiteurs / mois", "Chiffres mis à jour automatiquement"],
   },
   {
     nom: "Pro",
     prix: "99€",
     description: "Pour une agence ou un annuaire avec plusieurs pages.",
-    features: ["Tous les widgets (prix, loyers, taxe foncière, DPE)", "20 000 requêtes / mois", "Support prioritaire par email"],
+    features: ["Tous les indicateurs (prix, loyers, taxe foncière, DPE)", "Jusqu'à 20 000 visiteurs / mois", "Support prioritaire par email"],
     recommande: true,
   },
   {
     nom: "Enterprise",
     prix: "Sur devis",
     description: "Pour un réseau de sites ou un comparateur national.",
-    features: ["Volume de requêtes personnalisé", "Marque blanche complète (CSS custom)", "Accès API dédié"],
+    features: ["Trafic illimité", "À vos couleurs (design personnalisé)", "Accompagnement dédié"],
   },
 ];
 
@@ -64,28 +64,29 @@ export default function ProPage() {
             Espace Professionnels
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-            Intégrez nos données immobilières sur votre site
+            Les vrais chiffres de l&apos;immobilier, sur votre site
           </h1>
           <p className="text-slate-500 text-lg">
-            Un widget embarquable (prix au m², loyers moyens, taxe foncière, DPE) basé sur des données publiques réelles, mis à jour automatiquement — sans construire votre propre pipeline de données.
+            Affichez le prix au m², les loyers et la taxe foncière de chaque ville directement sur votre site.
+            Des chiffres officiels, toujours à jour, pour rassurer vos visiteurs et les garder chez vous plus longtemps.
           </p>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 text-center space-y-2 shadow-sm">
             <Code2 className="w-8 h-8 text-purple-600 mx-auto" />
-            <h3 className="font-semibold text-slate-900">Intégration en 5 minutes</h3>
-            <p className="text-sm text-slate-500">Un script à coller (`widget.js`), aucun backend à maintenir de votre côté.</p>
+            <h3 className="font-semibold text-slate-900">Installé en 5 minutes</h3>
+            <p className="text-sm text-slate-500">On vous donne un petit code à copier-coller. Aucune compétence technique requise.</p>
           </div>
           <div className="bg-white border border-slate-200 rounded-3xl p-6 text-center space-y-2 shadow-sm">
             <Gauge className="w-8 h-8 text-purple-600 mx-auto" />
-            <h3 className="font-semibold text-slate-900">Données à jour</h3>
-            <p className="text-sm text-slate-500">DVF, DPE, taxe foncière et loyers actualisés à chaque cycle de publication officiel.</p>
+            <h3 className="font-semibold text-slate-900">Toujours à jour</h3>
+            <p className="text-sm text-slate-500">Les chiffres se mettent à jour tout seuls. Vous n&apos;avez rien à gérer.</p>
           </div>
           <div className="bg-white border border-slate-200 rounded-3xl p-6 text-center space-y-2 shadow-sm">
             <ShieldCheck className="w-8 h-8 text-purple-600 mx-auto" />
-            <h3 className="font-semibold text-slate-900">Facturation simple</h3>
-            <p className="text-sm text-slate-500">Un abonnement mensuel fixe par site, sans surprise sur le volume normal d&apos;usage.</p>
+            <h3 className="font-semibold text-slate-900">Prix fixe, sans surprise</h3>
+            <p className="text-sm text-slate-500">Un abonnement mensuel clair par site. Pas de frais cachés.</p>
           </div>
         </div>
 
