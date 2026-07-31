@@ -39,6 +39,20 @@ export default function VatInvestorSimulator() {
     duree_detention_annees: 20,
   });
 
+  // Calcul de la référence : Investissement Locatif Classique (Achat au prix fort 100%, 0% décote, loyers dès J1, crédit bancaire)
+  const resClassic = simulateVenteATerme({
+    prix_marche: prixMarche,
+    surface,
+    loyer_m2: loyerM2,
+    taxe_fonciere_annuelle: taxeFonciere,
+    duree_terme_annees: 0,
+    decote_pct: 0.0,
+    apport,
+    taux_pret: 0.035,
+    duree_pret_annees: 25,
+    duree_detention_annees: 20,
+  });
+
   // Génération des 4 scénarios pour la table comparative
   const scenarios = [
     { label: 'Libre (Vacant J1)', duree: 0, decote: 0.00 },
@@ -170,6 +184,23 @@ export default function VatInvestorSimulator() {
               <p className="text-xs text-slate-400">
                 Prix d'achat déduit : {resCurrent.prix_achat.toLocaleString('fr-FR')} €
               </p>
+            </div>
+          </div>
+
+          {/* BANDEAU COMPARATIF VS INVESTISSEMENT CLASSIQUE */}
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0">
+                VS
+              </div>
+              <div>
+                <span className="font-bold text-slate-800 block">Comparé à un Investissement Locatif Classique</span>
+                <span className="text-slate-500 text-xs">Achat 100% prix du marché ({prixMarche.toLocaleString('fr-FR')} €), crédit 3,5%, loyers perçus dès J1</span>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-extrabold text-slate-700 block text-base">TRI {resClassic.tri_annualise_pct}%</span>
+              <span className="text-xs text-slate-500 font-medium">Gain : {resClassic.gain_net.toLocaleString('fr-FR')} €</span>
             </div>
           </div>
 
