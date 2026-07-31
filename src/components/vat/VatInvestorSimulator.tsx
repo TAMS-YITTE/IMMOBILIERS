@@ -13,6 +13,7 @@ export default function VatInvestorSimulator() {
   const [taxeFonciere, setTaxeFonciere] = useState<number>(1200);
   const [apport, setApport] = useState<number>(42000);
   const [dureeTerme, setDureeTerme] = useState<number>(0); // 0, 3, 10, 15
+  const [dureeDetention, setDureeDetention] = useState<number>(10); // 5, 10, 15, 20 ans
   const [leadOpen, setLeadOpen] = useState(false);
 
   // Table des décotes d'occupation selon la durée d'occupation réservée au vendeur (DUH)
@@ -36,7 +37,7 @@ export default function VatInvestorSimulator() {
     apport,
     taux_pret: 0.035,
     duree_pret_annees: 25,
-    duree_detention_annees: 20,
+    duree_detention_annees: dureeDetention,
   });
 
   // Calcul de la référence : Investissement Locatif Classique (Achat au prix fort 100%, 0% décote, loyers dès J1, crédit bancaire)
@@ -50,7 +51,7 @@ export default function VatInvestorSimulator() {
     apport,
     taux_pret: 0.035,
     duree_pret_annees: 25,
-    duree_detention_annees: 20,
+    duree_detention_annees: dureeDetention,
   });
 
   // Génération des 4 scénarios pour la table comparative
@@ -70,7 +71,7 @@ export default function VatInvestorSimulator() {
       apport,
       taux_pret: 0.035,
       duree_pret_annees: 25,
-      duree_detention_annees: 20,
+      duree_detention_annees: dureeDetention,
     });
     return { ...sc, res };
   });
@@ -151,9 +152,27 @@ export default function VatInvestorSimulator() {
                 onChange={(e) => setDureeTerme(Number(e.target.value))}
                 className="w-full accent-emerald-600"
               />
-              <p className="text-xs text-slate-500 mt-1">
-                Décote d'occupation appliquée : <strong>{(decoteCurrent * 100).toFixed(0)}%</strong>
-              </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Horizon de revente (projection)
+              </label>
+              <div className="grid grid-cols-4 gap-1">
+                {[5, 10, 15, 20].map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setDureeDetention(h)}
+                    className={`py-2 px-2 rounded-lg border text-xs font-semibold transition-all ${
+                      dureeDetention === h
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {h} ans
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Projection des cash-flows calculée sur <strong>{dureeDetention} ans</strong>.</p>
             </div>
           </div>
         </div>
@@ -170,19 +189,19 @@ export default function VatInvestorSimulator() {
                 {resCurrent.tri_annualise_pct}%
               </h3>
               <p className="text-xs text-emerald-200">
-                Basé sur l'effet de levier et la décote d'entrée
+                Projection sur {dureeDetention} ans
               </p>
             </div>
 
             <div className="p-6 bg-slate-900 rounded-2xl text-white text-center shadow-lg">
               <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider block mb-1">
-                Gain Net Total Estimé
+                Gain Net Total (sur {dureeDetention} ans)
               </span>
               <h3 className="text-4xl font-extrabold text-emerald-400 mb-2">
                 {resCurrent.gain_net.toLocaleString('fr-FR')} €
               </h3>
-              <p className="text-xs text-slate-400">
-                Prix d'achat déduit : {resCurrent.prix_achat.toLocaleString('fr-FR')} €
+              <p className="text-xs font-medium text-emerald-300">
+                Soit environ +{resCurrent.gain_net_annuel.toLocaleString('fr-FR')} € / an
               </p>
             </div>
           </div>

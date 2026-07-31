@@ -279,6 +279,8 @@ export function simulateVenteATerme(params: VenteATermeParams) {
     valeur_bien_finale: Math.round(valeurBien),
     patrimoine_net_final: Math.round(patrimoineFinal),
     gain_net: Math.round(gainNet),
+    gain_net_annuel: Math.round(gainNet / duree_detention_annees),
+    duree_detention_annees,
     tri_annualise_pct: Math.round(rGuess * 10000) / 100,
     total_loyers_percus: Math.round(totalLoyersPercus),
     capital_restant_du_final: Math.round(Math.max(0, capitalRestant)),
