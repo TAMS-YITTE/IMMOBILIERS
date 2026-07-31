@@ -152,6 +152,10 @@ export default function VatInvestorSimulator() {
                 onChange={(e) => setDureeTerme(Number(e.target.value))}
                 className="w-full accent-emerald-600"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Décote d'occupation appliquée : <strong>{(decoteCurrent * 100).toFixed(0)}%</strong>
+              </p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Horizon de revente (projection)
