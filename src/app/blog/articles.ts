@@ -77,6 +77,47 @@ export const ARTICLES: Article[] = [
       { type: 'p', html: "Utilisez notre <a href=\"/outils/notaire\">calculateur de frais de notaire</a> pour un montant précis selon votre bien, puis lancez le <a href=\"/\">simulateur Acheter ou Louer</a> : il intègre déjà ces frais dans le calcul de rentabilité de votre commune." },
     ],
   },
+  {
+    slug: 'vente-a-terme-libre-guide-complet',
+    title: 'Tout savoir sur la Vente à Terme Libre (VAT) : Fonctionnement et Avantages',
+    description:
+      'Acheter ou vendre sans prêt bancaire grâce à la Vente à Terme Libre. Découvrez le bouquet, la rente mensuelle, les garanties notariales et des exemples chiffrés.',
+    date: '2026-07-31',
+    readingMinutes: 7,
+    body: [
+      { type: 'p', html: "Le marché immobilier se tend et les crédits bancaires sont de plus en plus difficiles à obtenir. Face à ce constat, une alternative ancienne mais méconnue fait un retour en force : <strong>la Vente à Terme Libre (VAT)</strong>. Que vous soyez un acheteur sans financement bancaire ou un vendeur dont le bien stagne, cette solution débloque les transactions." },
+      { type: 'h2', text: 'Qu\'est-ce que la Vente à Terme Libre ?' },
+      { type: 'p', html: "La Vente à Terme Libre est une transaction dans laquelle le paiement s'effectue de manière échelonnée, directement entre l'acheteur et le vendeur, sans l'intervention d'une banque. Le terme « libre » signifie que l'acheteur peut occuper le bien, le louer, ou le revendre dès la signature chez le notaire." },
+      { type: 'ul', items: [
+        "Le Bouquet : Une somme payée comptant le jour de la signature chez le notaire (10% à 30%).",
+        "La Rente : Le solde divisé en mensualités fixes sans intérêts bancaires sur 10 à 20 ans.",
+      ] },
+      { type: 'h2', text: 'Pourquoi choisir la Vente à Terme Libre ?' },
+      { type: 'p', html: "Pour l'acheteur, c'est la certitude de devenir propriétaire malgré un refus de prêt bancaire, sans payer d'intérêts. Pour le vendeur, c'est l'assurance de <strong>vendre au prix fort</strong> (voire d'appliquer une prime de terme) sans brader son bien." },
+      { type: 'h2', text: 'Simuler votre projet' },
+      { type: 'p', html: "Découvrez dès maintenant nos outils dédiés : <a href=\"/vente-a-terme/capacite-achat\">Calculez votre capacité d'achat sans banque</a> ou <a href=\"/vente-a-terme/vendeur\">Simulez votre vente au prix fort</a>." },
+    ],
+  },
+  {
+    slug: 'vente-a-terme-ou-viager-difference',
+    title: 'Vente à Terme ou Viager : Lequel choisir ?',
+    description:
+      'Ne confondez plus Vente à Terme et Viager. Durée fixe vs aléa sur la vie, succession, fiscalité et sécurité financière : le comparatif complet.',
+    date: '2026-07-31',
+    readingMinutes: 6,
+    body: [
+      { type: 'p', html: "Lorsqu'on cherche à vendre ou acheter un bien immobilier avec un paiement échelonné, deux termes reviennent souvent : la Vente à Terme (VAT) et le Viager. Si le principe du bouquet et de la rente est commun, ce sont en réalité deux mécanismes diamétralement opposés." },
+      { type: 'h2', text: 'La différence fondamentale : L\'aléa de la vie' },
+      { type: 'ul', items: [
+        "Le Viager est un pari sur la vie : la durée dépend de la longévité du vendeur.",
+        "La Vente à Terme est une certitude : la durée est fixe (ex: 15 ans exacts), sans pari macabre.",
+      ] },
+      { type: 'h2', text: 'Que se passe-t-il en cas de décès ?' },
+      { type: 'p', html: "En viager, le paiement s'arrête au décès du vendeur et les héritiers ne touchent rien. En Vente à Terme, l'acheteur continue de payer les rentes aux héritiers jusqu'à l'échéance : le patrimoine familial est protégé à 100%." },
+      { type: 'h2', text: 'Faire le test de qualification' },
+      { type: 'p', html: "Découvrez quel dispositif correspond à votre situation avec notre <a href=\"/vente-a-terme/viager\">Tableau comparatif interactif VAT vs Viager</a> et notre <a href=\"/vente-a-terme\">Quiz d'éligibilité</a>." },
+    ],
+  },
 ];
 
 export function getArticle(slug: string): Article | undefined {

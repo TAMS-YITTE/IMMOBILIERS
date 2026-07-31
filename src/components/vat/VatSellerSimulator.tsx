@@ -9,15 +9,18 @@ export default function VatSellerSimulator() {
   const [prixSouhaite, setPrixSouhaite] = useState<number>(300000);
   const [duree, setDuree] = useState<number>(15);
   const [bouquetPourcentage, setBouquetPourcentage] = useState<number>(20);
+  const [primeDeTerme, setPrimeDeTerme] = useState<number>(5); // 0%, 5%, 10%
   const [leadOpen, setLeadOpen] = useState(false);
 
   // Hypothèses
   const DECOTE_CLASSIQUE = 0.08; // 8% de décote si vente rapide/classique difficile
 
-  // Calculs VAT
-  const bouquetVAT = prixSouhaite * (bouquetPourcentage / 100);
-  const capitalRenteVAT = prixSouhaite - bouquetVAT;
+  // Calculs VAT avec Prime de Terme
+  const prixFinalVAT = prixSouhaite * (1 + primeDeTerme / 100);
+  const bouquetVAT = prixFinalVAT * (bouquetPourcentage / 100);
+  const capitalRenteVAT = prixFinalVAT - bouquetVAT;
   const renteMensuelleVAT = capitalRenteVAT / (duree * 12);
+  const gainSurcote = prixFinalVAT - prixSouhaite;
 
   // Calculs Vente Classique Décotée
   const prixDecote = prixSouhaite * (1 - DECOTE_CLASSIQUE);
@@ -82,6 +85,33 @@ export default function VatSellerSimulator() {
               />
               <p className="text-xs text-slate-500 mt-1">Soit {Math.round(bouquetVAT).toLocaleString('fr-FR')} € payés comptant par l'acheteur chez le notaire.</p>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Prime de terme (Surcote échelonnement)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[0, 5, 10].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPrimeDeTerme(p)}
+                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                      primeDeTerme === p
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    +{p}% {p === 5 ? '(Conseillé)' : ''}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                {primeDeTerme > 0
+                  ? `Majorité de +${gainSurcote.toLocaleString('fr-FR')} € appliquée sur le prix.`
+                  : "Prix du marché direct (0% de surcote)."}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -111,7 +141,7 @@ export default function VatSellerSimulator() {
             {/* VENTE A TERME (VAT) */}
             <div className="relative p-6 rounded-2xl border-2 border-amber-300 bg-amber-50/30">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap shadow-md">
-                Votre prix préservé
+                {primeDeTerme > 0 ? `Prix valorisé (+${primeDeTerme}%)` : 'Votre prix préservé'}
               </div>
 
               <h4 className="text-lg font-bold text-amber-900 mb-1">Vente à Terme Libre</h4>
@@ -129,7 +159,7 @@ export default function VatSellerSimulator() {
                 <div className="mt-2 text-center pt-3 border-t border-amber-200/50">
                   <span className="text-xs uppercase tracking-wide text-amber-800/60 font-semibold block mb-1">Total perçu (échelonné)</span>
                   <span className="text-3xl font-extrabold text-amber-600">
-                    {Math.round(prixSouhaite).toLocaleString('fr-FR')} €
+                    {Math.round(prixFinalVAT).toLocaleString('fr-FR')} €
                   </span>
                 </div>
               </div>
