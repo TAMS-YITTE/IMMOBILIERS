@@ -37,6 +37,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/vente-a-terme" className="text-slate-600 hover:text-purple-600 transition-colors font-medium">
+                Vente à Terme (Sans Banque)
+              </Link>
+            </li>
+            <li>
               <Link href="/carte" className="hover:text-purple-600 transition-colors flex items-center gap-2 text-slate-600">
                 <Map className="w-4 h-4" /> Carte de France
               </Link>

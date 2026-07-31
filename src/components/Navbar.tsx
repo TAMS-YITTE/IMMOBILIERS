@@ -8,6 +8,7 @@ import { User } from '@supabase/supabase-js';
 import AuthModal from '@/components/AuthModal';
 
 const OUTILS = [
+  { href: '/vente-a-terme', label: 'Vente à Terme (Sans Banque)' },
   { href: '/outils/mensualite', label: 'Calcul Mensualité' },
   { href: '/outils/notaire', label: 'Frais de Notaire' },
   { href: '/outils/assurance-emprunteur', label: 'Assurance Emprunteur' },
