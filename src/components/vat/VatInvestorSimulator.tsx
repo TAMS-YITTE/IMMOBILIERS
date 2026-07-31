@@ -15,12 +15,12 @@ export default function VatInvestorSimulator() {
   const [dureeTerme, setDureeTerme] = useState<number>(0); // 0, 3, 10, 15
   const [leadOpen, setLeadOpen] = useState(false);
 
-  // Table des décotes standards selon la durée d'occupation du vendeur
+  // Table des décotes d'occupation selon la durée d'occupation réservée au vendeur (DUH)
   const getDecotePct = (years: number) => {
-    if (years === 0) return 0.30;  // VAT Libre
-    if (years <= 3) return 0.20;   // Bail restant (3 ans)
-    if (years <= 10) return 0.35;  // Occupé long (10 ans)
-    return 0.40;                   // Occupé très long (15 ans)
+    if (years === 0) return 0.00;  // VAT Libre (Occupé 0 an = Bien libre jour 1 = 0% décote d'occupation)
+    if (years <= 3) return 0.15;   // Bail restant (3 ans = 15% décote)
+    if (years <= 10) return 0.30;  // Occupé long (10 ans = 30% décote)
+    return 0.40;                   // Occupé très long (15 ans = 40% décote)
   };
 
   const decoteCurrent = getDecotePct(dureeTerme);
@@ -41,9 +41,9 @@ export default function VatInvestorSimulator() {
 
   // Génération des 4 scénarios pour la table comparative
   const scenarios = [
-    { label: 'Libre', duree: 0, decote: 0.30 },
-    { label: 'Bail restant', duree: 3, decote: 0.20 },
-    { label: 'Occupé long', duree: 10, decote: 0.35 },
+    { label: 'Libre (Vacant J1)', duree: 0, decote: 0.00 },
+    { label: 'Bail restant', duree: 3, decote: 0.15 },
+    { label: 'Occupé long', duree: 10, decote: 0.30 },
     { label: 'Occupé très long', duree: 15, decote: 0.40 },
   ].map((sc) => {
     const res = simulateVenteATerme({
@@ -66,7 +66,7 @@ export default function VatInvestorSimulator() {
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold text-slate-900 mb-4 flex justify-center items-center gap-2">
           <TrendingUp className="text-emerald-600" size={32} />
-          Simulateur Investisseur VAT (Occupée vs Libre)
+          Simulateur TRI Investisseur VAT
         </h2>
         <p className="text-slate-500 max-w-2xl mx-auto">
           Évaluez la rentabilité financière (TRI & Gain Net) d'un investissement en Vente à Terme selon la durée d'occupation réservée au vendeur.

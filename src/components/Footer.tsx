@@ -55,7 +55,7 @@ export default function Footer() {
             </li>
             <li>
               <Link href="/vente-a-terme/investisseur" className="text-emerald-700 font-semibold hover:text-emerald-600 transition-colors flex items-center gap-2">
-                Simulateur TRI Investisseur
+                Simulateur TRI Investisseur VAT
               </Link>
             </li>
             <li>
