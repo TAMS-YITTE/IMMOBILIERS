@@ -173,3 +173,115 @@ export function simulateBuyVsRent(params: SimulationParams) {
     history
   };
 }
+
+export interface VenteATermeParams {
+  prix_marche: number;
+  loyer_m2: number;
+  surface: number;
+  taxe_fonciere_annuelle: number;
+  duree_terme_annees: number;
+  decote_pct?: number;
+  apport?: number;
+  taux_pret?: number;
+  duree_pret_annees?: number;
+  taux_assurance?: number;
+  inflation_immo?: number;
+  inflation_loyer?: number;
+  charges_copro_m2_an?: number;
+  duree_detention_annees?: number;
+}
+
+export function simulateVenteATerme(params: VenteATermeParams) {
+  const {
+    prix_marche,
+    loyer_m2,
+    surface,
+    taxe_fonciere_annuelle,
+    duree_terme_annees,
+    decote_pct = 0.0,
+    apport = 0,
+    taux_pret = 0.035,
+    duree_pret_annees = 25,
+    taux_assurance = 0.003,
+    inflation_immo = 0.02,
+    inflation_loyer = 0.015,
+    charges_copro_m2_an = 25.0,
+    duree_detention_annees = 20,
+  } = params;
+
+  const prixAchat = prix_marche * (1 - decote_pct);
+  const fraisNotaire = prixAchat * 0.08;
+  const coutTotal = prixAchat + fraisNotaire;
+  const montantEmprunte = Math.max(0, coutTotal - apport);
+  const mensualite = calculateMonthlyMortgage(montantEmprunte, taux_pret, duree_pret_annees);
+  const assuranceMensuelle = (montantEmprunte * taux_assurance) / 12;
+  const chargeMensuelle = mensualite + assuranceMensuelle + (taxe_fonciere_annuelle / 12) + ((charges_copro_m2_an * surface) / 12);
+
+  let capitalRestant = montantEmprunte;
+  let loyerMensuel = 0.0;
+  let valeurBien = prix_marche;
+  let totalLoyersPercus = 0.0;
+  const moisTotal = duree_detention_annees * 12;
+  const tauxMensuelPret = taux_pret / 12;
+  const tauxMensuelInflationImmo = inflation_immo / 12;
+
+  const cashflows: number[] = [-apport]; // Mois 0: apport initial
+
+  for (let mois = 1; mois <= moisTotal; mois++) {
+    if (mois <= duree_pret_annees * 12) {
+      const interets = capitalRestant * tauxMensuelPret;
+      capitalRestant -= (mensualite - interets);
+    }
+
+    valeurBien *= (1 + tauxMensuelInflationImmo);
+
+    if (mois > duree_terme_annees * 12) {
+      if (mois === duree_terme_annees * 12 + 1) {
+        loyerMensuel = loyer_m2 * surface;
+      }
+      const loyerMensuelNet = loyerMensuel * 0.93;
+      totalLoyersPercus += loyerMensuelNet;
+      cashflows.push(loyerMensuelNet - chargeMensuelle);
+
+      if (mois % 12 === 0) {
+        loyerMensuel *= (1 + inflation_loyer);
+      }
+    } else {
+      cashflows.push(-chargeMensuelle);
+    }
+  }
+
+  // Revente finale
+  const patrimoineFinal = valeurBien - Math.max(0, capitalRestant);
+  cashflows[cashflows.length - 1] += patrimoineFinal;
+
+  // Calcul du TRI par Newton-Raphson
+  const npv = (rate: number) => {
+    return cashflows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + rate, i / 12), 0);
+  };
+
+  let rGuess = 0.04;
+  for (let iter = 0; iter < 80; iter++) {
+    const f = npv(rGuess);
+    if (Math.abs(f) < 0.01) break;
+    const fPrime = cashflows.reduce((acc, cf, i) => {
+      if (i === 0) return acc;
+      return acc + (-i / 12) * cf / Math.pow(1 + rGuess, i / 12 + 1);
+    }, 0);
+    rGuess -= f / (fPrime || 1e-9);
+  }
+
+  const gainNet = patrimoineFinal - apport - (chargeMensuelle * duree_terme_annees * 12);
+
+  return {
+    prix_achat: Math.round(prixAchat),
+    decote_appliquee_pct: Math.round(decote_pct * 1000) / 10,
+    valeur_bien_finale: Math.round(valeurBien),
+    patrimoine_net_final: Math.round(patrimoineFinal),
+    gain_net: Math.round(gainNet),
+    tri_annualise_pct: Math.round(rGuess * 10000) / 100,
+    total_loyers_percus: Math.round(totalLoyersPercus),
+    capital_restant_du_final: Math.round(Math.max(0, capitalRestant)),
+    prix_marche_initial: Math.round(prix_marche),
+  };
+}

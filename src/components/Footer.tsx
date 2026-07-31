@@ -54,6 +54,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/vente-a-terme/investisseur" className="text-emerald-700 font-semibold hover:text-emerald-600 transition-colors flex items-center gap-2">
+                Simulateur TRI Investisseur
+              </Link>
+            </li>
+            <li>
               <Link href="/outils/mensualite" className="text-slate-600 hover:text-amber-600 transition-colors flex items-center gap-2">
                 <Wrench className="w-4 h-4 text-amber-600" /> Calcul Mensualité
               </Link>
