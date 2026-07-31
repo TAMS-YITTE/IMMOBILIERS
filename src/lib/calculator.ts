@@ -271,7 +271,7 @@ export function simulateVenteATerme(params: VenteATermeParams) {
     rGuess -= f / (fPrime || 1e-9);
   }
 
-  const gainNet = patrimoineFinal - apport - (chargeMensuelle * duree_terme_annees * 12);
+  const gainNet = cashflows.reduce((acc, cf) => acc + cf, 0);
 
   return {
     prix_achat: Math.round(prixAchat),
