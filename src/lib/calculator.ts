@@ -174,116 +174,209 @@ export function simulateBuyVsRent(params: SimulationParams) {
   };
 }
 
-export interface VenteATermeParams {
-  prix_marche: number;
-  loyer_m2: number;
-  surface: number;
-  taxe_fonciere_annuelle: number;
-  duree_terme_annees: number;
-  decote_pct?: number;
-  apport?: number;
-  taux_pret?: number;
-  duree_pret_annees?: number;
-  taux_assurance?: number;
-  inflation_immo?: number;
-  inflation_loyer?: number;
-  charges_copro_m2_an?: number;
-  duree_detention_annees?: number;
+/**
+ * Calcul de l'impôt sur la plus-value immobilière des particuliers (France - CGI Art. 150 U).
+ * - Frais d'acquisition retenus : prix de marché + frais de notaire réels (8%).
+ * - Abattement IR (19%) : 6%/an de la 6e à la 21e année, 4% la 22e (exonération à 22 ans).
+ * - Abattement PS (17.2%) : 1.65%/an de la 6e à la 21e année, 1.60% la 22e, 9%/an de la 23e à la 30e (exonération à 30 ans).
+ */
+export function calculateFrenchCapitalGainsTax(plusValueBrute: number, years: number): number {
+  if (plusValueBrute <= 0) return 0;
+
+  // Abattement IR (Impôt sur le revenu : 19%)
+  let abattementIR = 0;
+  if (years > 5 && years <= 21) {
+    abattementIR = (years - 5) * 0.06;
+  } else if (years === 22) {
+    abattementIR = 16 * 0.06 + 0.04; // 100%
+  } else if (years > 22) {
+    abattementIR = 1.0;
+  }
+
+  // Abattement PS (Prélèvements sociaux : 17.2%)
+  let abattementPS = 0;
+  if (years > 5 && years <= 21) {
+    abattementPS = (years - 5) * 0.0165;
+  } else if (years === 22) {
+    abattementPS = 16 * 0.0165 + 0.0160; // 28%
+  } else if (years > 22 && years <= 30) {
+    abattementPS = 0.28 + (years - 22) * 0.09;
+    if (abattementPS > 1.0) abattementPS = 1.0;
+  } else if (years > 30) {
+    abattementPS = 1.0;
+  }
+
+  const baseIR = plusValueBrute * (1 - Math.min(1, abattementIR));
+  const basePS = plusValueBrute * (1 - Math.min(1, abattementPS));
+
+  return Math.round(baseIR * 0.19 + basePS * 0.172);
 }
 
+export interface VenteATermeParams {
+  prix_marche: number;
+  surface: number;
+  loyer_m2: number;
+  taxe_fonciere_annuelle: number;
+  bouquet_pct?: number; // Défaut 0.20 (20%)
+  duree_terme_annees: number;
+  duree_detention_annees: number;
+  inflation_immo?: number; // Défaut 0.02 (2%/an)
+  inflation_loyer?: number; // Défaut 0.015 (1.5%/an)
+  charges_copro_m2_an?: number; // Défaut 25 €/m²/an
+}
+
+/**
+ * Modélisation d'une VRAIE Vente à Terme Libre côté Investisseur (Sans prêt bancaire).
+ * 
+ * Mécanique :
+ * 1. Mois 0 : Paiement du Bouquet (prix_marche * bouquet_pct) + Frais de notaire (8% sur la valeur totale).
+ * 2. Mois 1 à duree_terme*12 : Versement d'une rente mensuelle FIXE sans intérêt au vendeur = (prix_marche - bouquet) / (duree_terme * 12).
+ * 3. Mois 1 à duree_detention*12 : Perception du loyer net (0.93 des loyers bruts) dès le jour 1 (VAT Libre), moins les charges propriétaires.
+ * 4. Revente (dernier mois) : Revente au prix valorisé par l'inflation. Solde de la rente si revente avant le terme,
+ *    déduction des frais d'agence de revente (5%) et déduction de l'impôt sur la plus-value immobilière française (IR + PS avec abattements).
+ */
 export function simulateVenteATerme(params: VenteATermeParams) {
   const {
     prix_marche,
-    loyer_m2,
     surface,
+    loyer_m2,
     taxe_fonciere_annuelle,
+    bouquet_pct = 0.20,
     duree_terme_annees,
-    decote_pct = 0.0,
-    apport = 0,
-    taux_pret = 0.035,
-    duree_pret_annees = 25,
-    taux_assurance = 0.003,
+    duree_detention_annees,
     inflation_immo = 0.02,
     inflation_loyer = 0.015,
     charges_copro_m2_an = 25.0,
-    duree_detention_annees = 20,
   } = params;
 
-  const prixAchat = prix_marche * (1 - decote_pct);
-  const fraisNotaire = prixAchat * 0.08;
-  const coutTotal = prixAchat + fraisNotaire;
-  const montantEmprunte = Math.max(0, coutTotal - apport);
-  const mensualite = calculateMonthlyMortgage(montantEmprunte, taux_pret, duree_pret_annees);
-  const assuranceMensuelle = (montantEmprunte * taux_assurance) / 12;
-  const chargeMensuelle = mensualite + assuranceMensuelle + (taxe_fonciere_annuelle / 12) + ((charges_copro_m2_an * surface) / 12);
+  // 1. Sortie initiale (Mois 0)
+  const bouquet = prix_marche * bouquet_pct;
+  const fraisNotaire = prix_marche * 0.08; // 8% calculés sur la valeur totale du bien
+  const cashflowMois0 = -(bouquet + fraisNotaire);
 
-  let capitalRestant = montantEmprunte;
-  let loyerMensuel = 0.0;
-  let valeurBien = prix_marche;
+  // 2. Rente mensuelle fixe sans intérêt sur le terme
+  const capitalRenteInitial = Math.max(0, prix_marche - bouquet);
+  const totalMoisTerme = Math.max(1, duree_terme_annees * 12);
+  const renteMensuelle = capitalRenteInitial / totalMoisTerme;
+
+  // 3. Charges mensuelles fixes propriétaires (Taxe foncière + Copropriété)
+  const chargesMensuellesFixes = (taxe_fonciere_annuelle / 12) + ((charges_copro_m2_an * surface) / 12);
+
+  // 4. Flux mensuels
   let totalLoyersPercus = 0.0;
-  const moisTotal = duree_detention_annees * 12;
-  const tauxMensuelPret = taux_pret / 12;
+  let loyerMensuelCourant = loyer_m2 * surface;
+  let valeurBien = prix_marche;
+  const moisDetentionTotal = Math.max(1, duree_detention_annees * 12);
   const tauxMensuelInflationImmo = inflation_immo / 12;
 
-  const cashflows: number[] = [-apport]; // Mois 0: apport initial
+  const cashflows: number[] = [cashflowMois0];
 
-  for (let mois = 1; mois <= moisTotal; mois++) {
-    if (mois <= duree_pret_annees * 12) {
-      const interets = capitalRestant * tauxMensuelPret;
-      capitalRestant -= (mensualite - interets);
-    }
-
+  for (let mois = 1; mois <= moisDetentionTotal; mois++) {
     valeurBien *= (1 + tauxMensuelInflationImmo);
 
-    if (mois > duree_terme_annees * 12) {
-      if (mois === duree_terme_annees * 12 + 1) {
-        loyerMensuel = loyer_m2 * surface;
-      }
-      const loyerMensuelNet = loyerMensuel * 0.93;
-      totalLoyersPercus += loyerMensuelNet;
-      cashflows.push(loyerMensuelNet - chargeMensuelle);
+    // Loyer net (7% de retenue pour frais de gestion & impayés)
+    const loyerMensuelNet = loyerMensuelCourant * 0.93;
+    totalLoyersPercus += loyerMensuelNet;
 
-      if (mois % 12 === 0) {
-        loyerMensuel *= (1 + inflation_loyer);
-      }
-    } else {
-      cashflows.push(-chargeMensuelle);
+    // Rente due tant que mois <= terme
+    const renteDue = (mois <= totalMoisTerme) ? renteMensuelle : 0;
+
+    // Cashflow mensuel = Loyer Net - Rente - Charges Fixes
+    const cf = loyerMensuelNet - renteDue - chargesMensuellesFixes;
+    cashflows.push(cf);
+
+    // Indexation annuelle des loyers
+    if (mois % 12 === 0) {
+      loyerMensuelCourant *= (1 + inflation_loyer);
     }
   }
 
-  // Revente finale
-  const patrimoineFinal = valeurBien - Math.max(0, capitalRestant);
-  cashflows[cashflows.length - 1] += patrimoineFinal;
+  // 5. Revente à la fin de la période de détention
+  const valeurBienFinale = valeurBien;
 
-  // Calcul du TRI par Newton-Raphson
+  // Solde du capital de rente restant dû si revente avant la fin du terme
+  let capitalRenteRestantDu = 0;
+  if (duree_detention_annees < duree_terme_annees) {
+    const moisRestantsTerme = (duree_terme_annees - duree_detention_annees) * 12;
+    capitalRenteRestantDu = renteMensuelle * moisRestantsTerme;
+  }
+
+  // Coûts de sortie de revente
+  const fraisAgenceRevente = valeurBienFinale * 0.05; // 5% frais d'agence
+  const plusValueBrute = Math.max(0, valeurBienFinale - (prix_marche + fraisNotaire));
+  const impotPlusValue = calculateFrenchCapitalGainsTax(plusValueBrute, duree_detention_annees);
+
+  // Cashflow net de sortie
+  const cashflowReventeNette = valeurBienFinale - capitalRenteRestantDu - fraisAgenceRevente - impotPlusValue;
+  cashflows[cashflows.length - 1] += cashflowReventeNette;
+
+  // 6. Solveur TRI Robuste (Newton-Raphson avec repli par bissection)
   const npv = (rate: number) => {
+    if (rate <= -0.99) return Infinity;
     return cashflows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + rate, i / 12), 0);
   };
 
-  let rGuess = 0.04;
-  for (let iter = 0; iter < 80; iter++) {
+  let rGuess = 0.05;
+  let converged = false;
+
+  for (let iter = 0; iter < 100; iter++) {
     const f = npv(rGuess);
-    if (Math.abs(f) < 0.01) break;
+    if (Math.abs(f) < 0.01) {
+      converged = true;
+      break;
+    }
     const fPrime = cashflows.reduce((acc, cf, i) => {
       if (i === 0) return acc;
-      return acc + (-i / 12) * cf / Math.pow(1 + rGuess, i / 12 + 1);
+      const base = 1 + rGuess;
+      if (base <= 0.01) return acc;
+      return acc + (-i / 12) * cf / Math.pow(base, i / 12 + 1);
     }, 0);
-    rGuess -= f / (fPrime || 1e-9);
+
+    if (Math.abs(fPrime) < 1e-12) break;
+    const nextGuess = rGuess - f / fPrime;
+    if (isNaN(nextGuess) || nextGuess <= -0.99 || nextGuess > 5.0) break;
+    rGuess = nextGuess;
+  }
+
+  // Repli par Bissection si Newton diverge ou renvoie NaN/Inf
+  if (!converged || isNaN(rGuess) || rGuess <= -0.99 || !isFinite(rGuess)) {
+    let low = -0.90;
+    let high = 1.00;
+    let mid = 0.05;
+    for (let i = 0; i < 60; i++) {
+      mid = (low + high) / 2;
+      const fMid = npv(mid);
+      if (Math.abs(fMid) < 0.01) break;
+      const fLow = npv(low);
+      if ((fLow > 0 && fMid > 0) || (fLow < 0 && fMid < 0)) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    rGuess = mid;
+  }
+
+  if (isNaN(rGuess) || !isFinite(rGuess)) {
+    rGuess = 0;
   }
 
   const gainNet = cashflows.reduce((acc, cf) => acc + cf, 0);
 
   return {
-    prix_achat: Math.round(prixAchat),
-    decote_appliquee_pct: Math.round(decote_pct * 1000) / 10,
-    valeur_bien_finale: Math.round(valeurBien),
-    patrimoine_net_final: Math.round(patrimoineFinal),
+    prix_marche: Math.round(prix_marche),
+    prix_achat: Math.round(prix_marche),
+    bouquet: Math.round(bouquet),
+    rente_mensuelle: Math.round(renteMensuelle),
+    total_loyers_percus: Math.round(totalLoyersPercus),
+    valeur_bien_finale: Math.round(valeurBienFinale),
+    capital_rente_restant_du: Math.round(capitalRenteRestantDu),
+    frais_agence_revente: Math.round(fraisAgenceRevente),
+    impot_plus_value: Math.round(impotPlusValue),
     gain_net: Math.round(gainNet),
     gain_net_annuel: Math.round(gainNet / duree_detention_annees),
-    duree_detention_annees,
     tri_annualise_pct: Math.round(rGuess * 10000) / 100,
-    total_loyers_percus: Math.round(totalLoyersPercus),
-    capital_restant_du_final: Math.round(Math.max(0, capitalRestant)),
-    prix_marche_initial: Math.round(prix_marche),
+    duree_terme_annees,
+    duree_detention_annees,
   };
 }
