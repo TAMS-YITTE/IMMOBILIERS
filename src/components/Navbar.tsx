@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Map, Building2, Wrench, Briefcase, Menu, X, ChevronDown, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
+import Image from 'next/image';
+import { Map, Building2, Wrench, Briefcase, Menu, X, ChevronDown, LogIn, LayoutDashboard, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import AuthModal from '@/components/AuthModal';
@@ -39,9 +40,14 @@ export default function Navbar() {
 
           {/* Logo / Brand */}
           <Link href="/" className="flex items-center gap-2 group shrink-0" onClick={() => setMobileOpen(false)}>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <Home className="w-4 h-4 text-white" />
-            </div>
+            <Image
+              src="/logo-mark.png"
+              alt="Logo Kalcul.app"
+              width={36}
+              height={36}
+              priority
+              className="w-9 h-9 group-hover:scale-105 transition-transform"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-900 text-transparent bg-clip-text">
               Kalcul.app
             </span>
