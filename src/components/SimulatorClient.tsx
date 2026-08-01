@@ -396,10 +396,15 @@ export default function SimulatorClient({ initialInsee, initialCommuneMetrics }:
 
         <header className="text-center space-y-4 py-12">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-            Acheter ou Louer à {currentCityName} ?
+            {/* Page ville (initialInsee fourni) : titre avec la commune, essentiel pour le SEO local.
+                Accueil (pas d'initialInsee) : titre generique — la ville par defaut (Paris 11e)
+                n'a aucun sens pour un visiteur et ferait doublon avec /acheter-ou-louer/75111. */}
+            {initialInsee ? `Acheter ou Louer à ${currentCityName} ?` : 'Acheter ou louer : le vrai calcul pour votre ville'}
           </h1>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Découvrez exactement quand l&apos;achat devient plus rentable que la location, basé sur des données publiques et réelles.
+            {initialInsee
+              ? "Découvrez exactement quand l'achat devient plus rentable que la location, basé sur des données publiques et réelles."
+              : "Cherchez votre commune et découvrez quand l'achat devient plus rentable que la location, à partir de données publiques et réelles."}
           </p>
         </header>
 
